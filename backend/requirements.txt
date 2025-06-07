@@ -1,0 +1,14 @@
+# Core FastAPI dependencies
+fastapi[standard]==0.115.12
+uvicorn[standard]==0.34.3
+
+# Additional production dependencies
+python-dotenv==1.1.0
+python-multipart==0.0.20
+
+# FastAPI CLI for development
+fastapi-cli==0.0.7
+
+# Development dependencies
+# pytest==7.4.0
+# httpx==0.24.1

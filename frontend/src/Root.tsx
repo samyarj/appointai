@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import App from "./App";
 import Calendar from "./Calendar";
 import Events from "./Events";
+import Todo from "./Todo";
+import Categories from "./Categories";
 import Navbar from "./Navbar";
 
 const Root: React.FC = () => (
@@ -32,6 +34,22 @@ const Root: React.FC = () => (
             element={
               <div className="h-full overflow-hidden">
                 <Events />
+              </div>
+            }
+          />
+          <Route
+            path="/todo"
+            element={
+              <div className="h-full overflow-hidden">
+                <Todo />
+              </div>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <div className="h-full overflow-hidden">
+                <Categories />
               </div>
             }
           />

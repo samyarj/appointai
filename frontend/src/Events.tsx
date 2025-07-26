@@ -3,18 +3,54 @@ import React, { useState } from "react";
 // Sample events data (same as Calendar component)
 const sampleEvents: Record<
   string,
-  Array<{ id: number; startTime: string; endTime: string; title: string; duration: string }>
+  Array<{
+    id: number;
+    startTime: string;
+    endTime: string;
+    title: string;
+    duration: string;
+  }>
 > = {
   "2025-07-26": [
-    { id: 1, startTime: "09:00", endTime: "10:00", title: "Team Meeting", duration: "1 hour" },
-    { id: 2, startTime: "14:30", endTime: "15:00", title: "Doctor Appointment", duration: "30 min" },
+    {
+      id: 1,
+      startTime: "09:00",
+      endTime: "10:00",
+      title: "Team Meeting",
+      duration: "1 hour",
+    },
+    {
+      id: 2,
+      startTime: "14:30",
+      endTime: "15:00",
+      title: "Doctor Appointment",
+      duration: "30 min",
+    },
   ],
   "2025-07-27": [
-    { id: 3, startTime: "10:00", endTime: "10:45", title: "Client Call", duration: "45 min" },
+    {
+      id: 3,
+      startTime: "10:00",
+      endTime: "10:45",
+      title: "Client Call",
+      duration: "45 min",
+    },
   ],
   "2025-07-28": [
-    { id: 4, startTime: "16:00", endTime: "17:30", title: "Gym Session", duration: "1.5 hours" },
-    { id: 5, startTime: "19:00", endTime: "21:00", title: "Dinner with Friends", duration: "2 hours" },
+    {
+      id: 4,
+      startTime: "16:00",
+      endTime: "17:30",
+      title: "Gym Session",
+      duration: "1.5 hours",
+    },
+    {
+      id: 5,
+      startTime: "19:00",
+      endTime: "21:00",
+      title: "Dinner with Friends",
+      duration: "2 hours",
+    },
   ],
 };
 
@@ -82,11 +118,12 @@ const Events: React.FC = () => {
     const yearEvents = allEvents.filter(
       (event) => event.dateObj >= yearStart && event.dateObj < yearEnd
     );
-    const yearTotalHours = (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
+    const yearTotalHours =
+      (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
     const yearEventHours = yearEvents.reduce((total, event) => {
       const [startHour, startMin] = event.startTime.split(":").map(Number);
       const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
       return total + duration / 60;
     }, 0);
     const yearDensity = (yearEventHours / yearTotalHours) * 100;
@@ -97,11 +134,12 @@ const Events: React.FC = () => {
     const monthEvents = allEvents.filter(
       (event) => event.dateObj >= monthStart && event.dateObj < monthEnd
     );
-    const monthTotalHours = (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
+    const monthTotalHours =
+      (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
     const monthEventHours = monthEvents.reduce((total, event) => {
       const [startHour, startMin] = event.startTime.split(":").map(Number);
       const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
       return total + duration / 60;
     }, 0);
     const monthDensity = (monthEventHours / monthTotalHours) * 100;
@@ -115,11 +153,12 @@ const Events: React.FC = () => {
     const weekEvents = allEvents.filter(
       (event) => event.dateObj >= weekStart && event.dateObj < weekEnd
     );
-    const weekTotalHours = (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
+    const weekTotalHours =
+      (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
     const weekEventHours = weekEvents.reduce((total, event) => {
       const [startHour, startMin] = event.startTime.split(":").map(Number);
       const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
       return total + duration / 60;
     }, 0);
     const weekDensity = (weekEventHours / weekTotalHours) * 100;
@@ -136,16 +175,32 @@ const Events: React.FC = () => {
     const dayEventHours = dayEvents.reduce((total, event) => {
       const [startHour, startMin] = event.startTime.split(":").map(Number);
       const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
       return total + duration / 60;
     }, 0);
     const dayDensity = (dayEventHours / dayTotalHours) * 100;
 
     return {
-      year: { density: yearDensity, events: yearEvents.length, hours: yearEventHours },
-      month: { density: monthDensity, events: monthEvents.length, hours: monthEventHours },
-      week: { density: weekDensity, events: weekEvents.length, hours: weekEventHours },
-      day: { density: dayDensity, events: dayEvents.length, hours: dayEventHours },
+      year: {
+        density: yearDensity,
+        events: yearEvents.length,
+        hours: yearEventHours,
+      },
+      month: {
+        density: monthDensity,
+        events: monthEvents.length,
+        hours: monthEventHours,
+      },
+      week: {
+        density: weekDensity,
+        events: weekEvents.length,
+        hours: weekEventHours,
+      },
+      day: {
+        density: dayDensity,
+        events: dayEvents.length,
+        hours: dayEventHours,
+      },
     };
   };
 
@@ -159,38 +214,62 @@ const Events: React.FC = () => {
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">All Events</h1>
-          
+
           {/* Event Density Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
               <h3 className="font-semibold text-blue-800 text-sm">Year</h3>
-              <p className="text-2xl font-bold text-blue-900">{eventDensity.year.density.toFixed(1)}%</p>
-              <p className="text-xs text-blue-600">{eventDensity.year.events} events, {eventDensity.year.hours.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-blue-900">
+                {eventDensity.year.density.toFixed(1)}%
+              </p>
+              <p className="text-xs text-blue-600">
+                {eventDensity.year.events} events,{" "}
+                {eventDensity.year.hours.toFixed(1)}h
+              </p>
             </div>
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
               <h3 className="font-semibold text-green-800 text-sm">Month</h3>
-              <p className="text-2xl font-bold text-green-900">{eventDensity.month.density.toFixed(1)}%</p>
-              <p className="text-xs text-green-600">{eventDensity.month.events} events, {eventDensity.month.hours.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-green-900">
+                {eventDensity.month.density.toFixed(1)}%
+              </p>
+              <p className="text-xs text-green-600">
+                {eventDensity.month.events} events,{" "}
+                {eventDensity.month.hours.toFixed(1)}h
+              </p>
             </div>
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
               <h3 className="font-semibold text-purple-800 text-sm">Week</h3>
-              <p className="text-2xl font-bold text-purple-900">{eventDensity.week.density.toFixed(1)}%</p>
-              <p className="text-xs text-purple-600">{eventDensity.week.events} events, {eventDensity.week.hours.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {eventDensity.week.density.toFixed(1)}%
+              </p>
+              <p className="text-xs text-purple-600">
+                {eventDensity.week.events} events,{" "}
+                {eventDensity.week.hours.toFixed(1)}h
+              </p>
             </div>
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
               <h3 className="font-semibold text-orange-800 text-sm">Today</h3>
-              <p className="text-2xl font-bold text-orange-900">{eventDensity.day.density.toFixed(1)}%</p>
-              <p className="text-xs text-orange-600">{eventDensity.day.events} events, {eventDensity.day.hours.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {eventDensity.day.density.toFixed(1)}%
+              </p>
+              <p className="text-xs text-orange-600">
+                {eventDensity.day.events} events,{" "}
+                {eventDensity.day.hours.toFixed(1)}h
+              </p>
             </div>
           </div>
 
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">Filter:</label>
+              <label className="text-sm font-medium text-gray-600">
+                Filter:
+              </label>
               <select
                 value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as "all" | "upcoming" | "past")}
+                onChange={(e) =>
+                  setFilterBy(e.target.value as "all" | "upcoming" | "past")
+                }
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Events</option>
@@ -199,7 +278,9 @@ const Events: React.FC = () => {
               </select>
             </div>
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">Sort by:</label>
+              <label className="text-sm font-medium text-gray-600">
+                Sort by:
+              </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "date" | "title")}
@@ -221,8 +302,9 @@ const Events: React.FC = () => {
             <div className="space-y-4">
               {filteredEvents.map((event) => {
                 const isPast = event.dateObj < today;
-                const isToday = event.dateObj.toDateString() === today.toDateString();
-                
+                const isToday =
+                  event.dateObj.toDateString() === today.toDateString();
+
                 return (
                   <div
                     key={`${event.date}-${event.id}`}
@@ -237,9 +319,11 @@ const Events: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className={`font-semibold text-lg ${
-                            isPast ? "text-gray-600" : "text-gray-800"
-                          }`}>
+                          <h3
+                            className={`font-semibold text-lg ${
+                              isPast ? "text-gray-600" : "text-gray-800"
+                            }`}
+                          >
                             {event.title}
                           </h3>
                           {isToday && (
@@ -253,11 +337,14 @@ const Events: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className={`flex items-center gap-4 text-sm ${
-                          isPast ? "text-gray-500" : "text-gray-600"
-                        }`}>
+                        <div
+                          className={`flex items-center gap-4 text-sm ${
+                            isPast ? "text-gray-500" : "text-gray-600"
+                          }`}
+                        >
                           <span className="font-medium">
-                            📅 {event.dateObj.toLocaleDateString("en-US", {
+                            📅{" "}
+                            {event.dateObj.toLocaleDateString("en-US", {
                               weekday: "long",
                               year: "numeric",
                               month: "long",
@@ -290,12 +377,11 @@ const Events: React.FC = () => {
                 No events found
               </h3>
               <p className="text-gray-400 mb-6">
-                {filterBy === "upcoming" 
+                {filterBy === "upcoming"
                   ? "No upcoming events scheduled"
                   : filterBy === "past"
                   ? "No past events found"
-                  : "No events in your calendar"
-                }
+                  : "No events in your calendar"}
               </p>
               <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                 Add Event

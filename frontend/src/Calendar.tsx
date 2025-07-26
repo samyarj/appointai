@@ -21,18 +21,54 @@ type ViewMode = "month" | "week" | "year" | "day";
 // Sample events data
 const sampleEvents: Record<
   string,
-  Array<{ id: number; startTime: string; endTime: string; title: string; duration: string }>
+  Array<{
+    id: number;
+    startTime: string;
+    endTime: string;
+    title: string;
+    duration: string;
+  }>
 > = {
   "2025-07-26": [
-    { id: 1, startTime: "09:00", endTime: "10:00", title: "Team Meeting", duration: "1 hour" },
-    { id: 2, startTime: "14:30", endTime: "15:00", title: "Doctor Appointment", duration: "30 min" },
+    {
+      id: 1,
+      startTime: "09:00",
+      endTime: "10:00",
+      title: "Team Meeting",
+      duration: "1 hour",
+    },
+    {
+      id: 2,
+      startTime: "14:30",
+      endTime: "15:00",
+      title: "Doctor Appointment",
+      duration: "30 min",
+    },
   ],
   "2025-07-27": [
-    { id: 3, startTime: "10:00", endTime: "10:45", title: "Client Call", duration: "45 min" },
+    {
+      id: 3,
+      startTime: "10:00",
+      endTime: "10:45",
+      title: "Client Call",
+      duration: "45 min",
+    },
   ],
   "2025-07-28": [
-    { id: 4, startTime: "16:00", endTime: "17:30", title: "Gym Session", duration: "1.5 hours" },
-    { id: 5, startTime: "19:00", endTime: "21:00", title: "Dinner with Friends", duration: "2 hours" },
+    {
+      id: 4,
+      startTime: "16:00",
+      endTime: "17:30",
+      title: "Gym Session",
+      duration: "1.5 hours",
+    },
+    {
+      id: 5,
+      startTime: "19:00",
+      endTime: "21:00",
+      title: "Dinner with Friends",
+      duration: "2 hours",
+    },
   ],
 };
 
@@ -124,7 +160,7 @@ const Calendar: React.FC = () => {
     const getAllEventsInRange = (startDate: Date, endDate: Date) => {
       const events: Array<{ startTime: string; endTime: string }> = [];
       const currentDate = new Date(startDate);
-      
+
       while (currentDate < endDate) {
         const dateKey = currentDate.toISOString().split("T")[0];
         if (sampleEvents[dateKey]) {
@@ -132,15 +168,17 @@ const Calendar: React.FC = () => {
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
-      
+
       return events;
     };
 
-    const calculateEventHours = (events: Array<{ startTime: string; endTime: string }>) => {
+    const calculateEventHours = (
+      events: Array<{ startTime: string; endTime: string }>
+    ) => {
       return events.reduce((total, event) => {
         const [startHour, startMin] = event.startTime.split(":").map(Number);
         const [endHour, endMin] = event.endTime.split(":").map(Number);
-        const duration = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+        const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
         return total + duration / 60;
       }, 0);
     };
@@ -150,14 +188,16 @@ const Calendar: React.FC = () => {
       const yearEnd = new Date(current.year + 1, 0, 1);
       const events = getAllEventsInRange(yearStart, yearEnd);
       const eventHours = calculateEventHours(events);
-      const totalHours = (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
+      const totalHours =
+        (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
       return (eventHours / totalHours) * 100;
     } else if (view === "month") {
       const monthStart = new Date(current.year, current.month, 1);
       const monthEnd = new Date(current.year, current.month + 1, 1);
       const events = getAllEventsInRange(monthStart, monthEnd);
       const eventHours = calculateEventHours(events);
-      const totalHours = (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
+      const totalHours =
+        (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
       return (eventHours / totalHours) * 100;
     } else if (view === "week") {
       const weekDate = new Date(current.year, current.month, current.day);
@@ -168,7 +208,8 @@ const Calendar: React.FC = () => {
       weekEnd.setDate(weekStart.getDate() + 7);
       const events = getAllEventsInRange(weekStart, weekEnd);
       const eventHours = calculateEventHours(events);
-      const totalHours = (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
+      const totalHours =
+        (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
       return (eventHours / totalHours) * 100;
     } else if (view === "day") {
       const dayStart = new Date(current.year, current.month, current.day);
@@ -332,7 +373,9 @@ const Calendar: React.FC = () => {
                       : ""
                   }
                   ${
-                    hasEventsForDay && isPastDay ? "border-l-4 border-l-gray-300" : ""
+                    hasEventsForDay && isPastDay
+                      ? "border-l-4 border-l-gray-300"
+                      : ""
                   }
                 `}
               >
@@ -403,11 +446,17 @@ const Calendar: React.FC = () => {
                     ? "border-l-4 border-l-green-400"
                     : ""
                 }
-                ${hasEventsForDay && isPastDay ? "border-l-4 border-l-gray-300" : ""}
+                ${
+                  hasEventsForDay && isPastDay
+                    ? "border-l-4 border-l-gray-300"
+                    : ""
+                }
               `}
             >
               <div
-                className={`${hasEventsForDay && !isToday ? "font-semibold" : ""}`}
+                className={`${
+                  hasEventsForDay && !isToday ? "font-semibold" : ""
+                }`}
               >
                 {date.getDate()}
               </div>
@@ -691,7 +740,7 @@ const Calendar: React.FC = () => {
               ></div>
             </div>
           </div>
-          
+
           {/* Event Density */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -705,7 +754,9 @@ const Calendar: React.FC = () => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${Math.min(100, getEventDensityForView() * 10)}%` }}
+                style={{
+                  width: `${Math.min(100, getEventDensityForView() * 10)}%`,
+                }}
               ></div>
             </div>
           </div>

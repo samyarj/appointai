@@ -5,6 +5,8 @@ const navItems = [
   { name: "Home", path: "/" },
   { name: "Calendar", path: "/calendar" },
   { name: "Events", path: "/events" },
+  { name: "Todo", path: "/todo" },
+  { name: "Categories", path: "/categories" },
 ];
 
 const Navbar: React.FC = () => {

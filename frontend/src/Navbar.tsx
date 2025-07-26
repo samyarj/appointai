@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 const navItems = [
   { name: "Home", path: "/" },
   { name: "Calendar", path: "/calendar" },
-  // ...
+  { name: "Events", path: "/events" },
 ];
 
 const Navbar: React.FC = () => {

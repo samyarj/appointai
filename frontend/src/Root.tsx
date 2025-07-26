@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import App from "./App";
 import Calendar from "./Calendar";
+import Events from "./Events";
 import Navbar from "./Navbar";
 
 const Root: React.FC = () => (
@@ -23,6 +24,14 @@ const Root: React.FC = () => (
             element={
               <div className="h-full overflow-hidden">
                 <Calendar />
+              </div>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <div className="h-full overflow-hidden">
+                <Events />
               </div>
             }
           />

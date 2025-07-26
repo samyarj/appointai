@@ -11,7 +11,7 @@ const Root: React.FC = () => (
   <Router>
     <div className="h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
       <Navbar />
-      <div className="h-full pt-24">
+      <div className="h-full pl-20">
         <Routes>
           <Route
             path="/"

@@ -5,6 +5,7 @@ import Calendar from "./Calendar";
 import Events from "./Events";
 import Todo from "./Todo";
 import Categories from "./Categories";
+import Profile from "./Profile";
 import Navbar from "./Navbar";
 
 const Root: React.FC = () => (
@@ -16,7 +17,7 @@ const Root: React.FC = () => (
           <Route
             path="/"
             element={
-              <div className="container mx-auto px-4 py-8 overflow-auto h-full">
+              <div className="h-full overflow-hidden">
                 <App />
               </div>
             }
@@ -50,6 +51,14 @@ const Root: React.FC = () => (
             element={
               <div className="h-full overflow-hidden">
                 <Categories />
+              </div>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <div className="h-full overflow-hidden">
+                <Profile />
               </div>
             }
           />

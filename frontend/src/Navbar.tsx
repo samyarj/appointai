@@ -102,6 +102,26 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    name: "Profile",
+    path: "/profile",
+    color: "indigo",
+    icon: (
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        />
+      </svg>
+    ),
+  },
 ];
 
 const Navbar: React.FC = () => {
@@ -121,6 +141,7 @@ const Navbar: React.FC = () => {
         green: "text-green-500 hover:text-green-700",
         orange: "text-orange-500 hover:text-orange-700",
         purple: "text-purple-500 hover:text-purple-700",
+        indigo: "text-indigo-500 hover:text-indigo-700",
       };
 
       return {
@@ -145,9 +166,7 @@ const Navbar: React.FC = () => {
                 className={`p-4 rounded-lg transition-colors border ${colors.text} ${colors.bg} ${colors.border}`}
                 title={item.name}
               >
-                <div className={isActive ? "text-white" : ""}>
-                  {item.icon}
-                </div>
+                <div className={isActive ? "text-white" : ""}>{item.icon}</div>
               </Link>
             );
           })}

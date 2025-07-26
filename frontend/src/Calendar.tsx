@@ -331,11 +331,11 @@ const Calendar: React.FC = () => {
 
     return (
       <>
-        <div className="grid grid-cols-7 gap-2 mb-4">
+        <div className="grid grid-cols-7 gap-3 mb-6">
           {daysOfWeek.map(d => (
             <div
               key={d}
-              className="font-semibold text-center text-gray-600 py-2"
+              className="font-semibold text-center text-gray-600 py-4"
             >
               {d}
             </div>
@@ -356,7 +356,7 @@ const Calendar: React.FC = () => {
                 key={i}
                 onClick={() => day && selectDay(day)}
                 className={`
-                  h-12 flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200
+                  h-24 flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200
                   ${day ? "hover:bg-blue-50 hover:shadow-md" : ""}
                   ${
                     isToday
@@ -381,7 +381,7 @@ const Calendar: React.FC = () => {
               >
                 <div className="text-center">
                   <div
-                    className={`${
+                    className={`text-xl ${
                       hasEventsForDay && !isToday ? "font-semibold" : ""
                     }`}
                   >
@@ -389,7 +389,7 @@ const Calendar: React.FC = () => {
                   </div>
                   {hasEventsForDay && (
                     <div
-                      className={`w-1 h-1 rounded-full mx-auto mt-1 ${
+                      className={`w-2 h-2 rounded-full mx-auto mt-2 ${
                         isPastDay ? "bg-gray-300" : "bg-green-400"
                       }`}
                     ></div>
@@ -414,9 +414,9 @@ const Calendar: React.FC = () => {
     });
 
     return (
-      <div className="grid grid-cols-7 gap-2 mb-4">
+      <div className="grid grid-cols-7 gap-3 mb-6">
         {daysOfWeek.map(d => (
-          <div key={d} className="font-semibold text-center text-gray-600 py-2">
+          <div key={d} className="font-semibold text-center text-gray-600 py-4">
             {d}
           </div>
         ))}
@@ -432,7 +432,7 @@ const Calendar: React.FC = () => {
                 selectDay(date.getDate(), date.getMonth(), date.getFullYear())
               }
               className={`
-                h-16 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all duration-200
+                h-32 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all duration-200
                 hover:bg-blue-50 hover:shadow-md
                 ${
                   isToday
@@ -454,7 +454,7 @@ const Calendar: React.FC = () => {
               `}
             >
               <div
-                className={`${
+                className={`text-xl ${
                   hasEventsForDay && !isToday ? "font-semibold" : ""
                 }`}
               >
@@ -462,7 +462,7 @@ const Calendar: React.FC = () => {
               </div>
               {hasEventsForDay && (
                 <div
-                  className={`text-xs mt-1 ${
+                  className={`text-sm mt-2 ${
                     isPastDay ? "text-gray-400" : "text-green-600"
                   }`}
                 >
@@ -478,18 +478,20 @@ const Calendar: React.FC = () => {
 
   function renderYear() {
     return (
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-8">
         {months.map((m, idx) => (
           <div
             key={m}
-            className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm"
+            className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm"
           >
-            <div className="font-bold text-center mb-3 text-gray-700">{m}</div>
-            <div className="grid grid-cols-7 gap-1 text-xs">
+            <div className="font-bold text-center mb-6 text-gray-700 text-xl">
+              {m}
+            </div>
+            <div className="grid grid-cols-7 gap-1.5 text-sm">
               {daysOfWeek.map(d => (
                 <div
                   key={d}
-                  className="font-semibold text-center text-gray-500"
+                  className="font-semibold text-center text-gray-500 py-2"
                 >
                   {d[0]}
                 </div>
@@ -515,7 +517,7 @@ const Calendar: React.FC = () => {
                       key={i}
                       onClick={() => day && selectDay(day, idx)}
                       className={`
-                        h-6 flex items-center justify-center rounded cursor-pointer
+                        h-10 flex items-center justify-center rounded cursor-pointer text-sm
                         ${day ? "hover:bg-blue-100" : ""}
                         ${
                           isToday
@@ -610,7 +612,7 @@ const Calendar: React.FC = () => {
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header with navigation and view toggles */}
-        <div className="flex flex-col sm:flex-row justify-between items-center p-6 pb-4 gap-4 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row justify-between items-center p-8 pb-6 gap-4 flex-shrink-0">
           <div className="flex gap-2">
             <button
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -722,7 +724,7 @@ const Calendar: React.FC = () => {
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6 pb-4 flex-shrink-0">
+        <div className="px-8 pb-6 flex-shrink-0">
           {/* Time Progress */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
@@ -763,7 +765,7 @@ const Calendar: React.FC = () => {
         </div>
 
         {/* Calendar content */}
-        <div className="flex-1 overflow-auto px-6 pb-6">
+        <div className="flex-1 overflow-auto px-8 pb-8">
           {view === "month" && renderMonth()}
           {view === "week" && renderWeek()}
           {view === "year" && renderYear()}

@@ -65,7 +65,9 @@ const Todo: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
   const [showAddForm, setShowAddForm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
-  const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "created">("priority");
+  const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "created">(
+    "priority"
+  );
   const [newTodo, setNewTodo] = useState<Partial<TodoItem>>({
     title: "",
     description: "",
@@ -111,9 +113,11 @@ const Todo: React.FC = () => {
   };
 
   const handleToggleComplete = (id: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    setTodos(
+      todos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
   const handleDeleteTodo = (id: number) => {
@@ -152,8 +156,8 @@ const Todo: React.FC = () => {
     const total = todos.length;
     const completed = todos.filter(t => t.completed).length;
     const pending = total - completed;
-    const overdue = todos.filter(t => 
-      !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
+    const overdue = todos.filter(
+      t => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
     ).length;
 
     return { total, completed, pending, overdue };
@@ -173,8 +177,18 @@ const Todo: React.FC = () => {
               onClick={() => setShowAddForm(true)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Todo
             </button>
@@ -187,12 +201,18 @@ const Todo: React.FC = () => {
               <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
             </div>
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 text-sm">Completed</h3>
-              <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
+              <h3 className="font-semibold text-green-800 text-sm">
+                Completed
+              </h3>
+              <p className="text-2xl font-bold text-green-900">
+                {stats.completed}
+              </p>
             </div>
             <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4">
               <h3 className="font-semibold text-yellow-800 text-sm">Pending</h3>
-              <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
+              <p className="text-2xl font-bold text-yellow-900">
+                {stats.pending}
+              </p>
             </div>
             <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4">
               <h3 className="font-semibold text-red-800 text-sm">Overdue</h3>
@@ -203,10 +223,14 @@ const Todo: React.FC = () => {
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">Filter:</label>
+              <label className="text-sm font-medium text-gray-600">
+                Filter:
+              </label>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as "all" | "pending" | "completed")}
+                onChange={e =>
+                  setFilter(e.target.value as "all" | "pending" | "completed")
+                }
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All</option>
@@ -215,10 +239,16 @@ const Todo: React.FC = () => {
               </select>
             </div>
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">Sort by:</label>
+              <label className="text-sm font-medium text-gray-600">
+                Sort by:
+              </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "priority" | "dueDate" | "created")}
+                onChange={e =>
+                  setSortBy(
+                    e.target.value as "priority" | "dueDate" | "created"
+                  )
+                }
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="priority">Priority</option>
@@ -236,18 +266,21 @@ const Todo: React.FC = () => {
         <div className="flex-1 overflow-auto p-6">
           {filteredTodos.length > 0 ? (
             <div className="space-y-4">
-              {filteredTodos.map((todo) => {
-                const isOverdue = todo.dueDate && new Date(todo.dueDate) < new Date() && !todo.completed;
+              {filteredTodos.map(todo => {
+                const isOverdue =
+                  todo.dueDate &&
+                  new Date(todo.dueDate) < new Date() &&
+                  !todo.completed;
 
                 return (
                   <div
                     key={todo.id}
                     className={`border rounded-lg p-4 transition-all duration-200 ${
-                      todo.completed 
-                        ? "bg-gray-50 border-gray-200 opacity-75" 
+                      todo.completed
+                        ? "bg-gray-50 border-gray-200 opacity-75"
                         : isOverdue
-                        ? "bg-red-50 border-red-200"
-                        : "bg-white border-gray-200 hover:shadow-md"
+                          ? "bg-red-50 border-red-200"
+                          : "bg-white border-gray-200 hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-start gap-4">
@@ -260,18 +293,36 @@ const Todo: React.FC = () => {
                         }`}
                       >
                         {todo.completed && (
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                       </button>
 
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h3 className={`font-semibold ${todo.completed ? "line-through text-gray-500" : "text-gray-800"}`}>
+                          <h3
+                            className={`font-semibold ${
+                              todo.completed
+                                ? "line-through text-gray-500"
+                                : "text-gray-800"
+                            }`}
+                          >
                             {todo.title}
                           </h3>
-                          <span className={`px-2 py-1 text-xs rounded-full border ${priorityColors[todo.priority]}`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full border ${
+                              priorityColors[todo.priority]
+                            }`}
+                          >
                             {todo.priority}
                           </span>
                           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
@@ -285,7 +336,11 @@ const Todo: React.FC = () => {
                         </div>
 
                         {todo.description && (
-                          <p className={`text-sm mb-2 ${todo.completed ? "text-gray-400" : "text-gray-600"}`}>
+                          <p
+                            className={`text-sm mb-2 ${
+                              todo.completed ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
                             {todo.description}
                           </p>
                         )}
@@ -293,9 +348,14 @@ const Todo: React.FC = () => {
                         <div className="flex flex-wrap gap-4 text-xs text-gray-500">
                           <span>📅 Duration: {todo.estimatedDuration}</span>
                           {todo.dueDate && (
-                            <span>🗓️ Due: {new Date(todo.dueDate).toLocaleDateString()}</span>
+                            <span>
+                              🗓️ Due:{" "}
+                              {new Date(todo.dueDate).toLocaleDateString()}
+                            </span>
                           )}
-                          <span>🕒 Created: {todo.createdAt.toLocaleDateString()}</span>
+                          <span>
+                            🕒 Created: {todo.createdAt.toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
 
@@ -303,8 +363,16 @@ const Todo: React.FC = () => {
                         onClick={() => handleDeleteTodo(todo.id)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -336,25 +404,35 @@ const Todo: React.FC = () => {
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Add New Todo</h2>
-            
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Add New Todo
+            </h2>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={newTodo.title || ""}
-                  onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
+                  onChange={e =>
+                    setNewTodo({ ...newTodo, title: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter todo title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
                   value={newTodo.description || ""}
-                  onChange={(e) => setNewTodo({ ...newTodo, description: e.target.value })}
+                  onChange={e =>
+                    setNewTodo({ ...newTodo, description: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Enter description"
@@ -363,10 +441,17 @@ const Todo: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
                   <select
                     value={newTodo.priority || "medium"}
-                    onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value as Priority })}
+                    onChange={e =>
+                      setNewTodo({
+                        ...newTodo,
+                        priority: e.target.value as Priority,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">Low</option>
@@ -376,11 +461,15 @@ const Todo: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
                   <input
                     type="text"
                     value={newTodo.category || ""}
-                    onChange={(e) => setNewTodo({ ...newTodo, category: e.target.value })}
+                    onChange={e =>
+                      setNewTodo({ ...newTodo, category: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Work, Personal"
                   />
@@ -389,22 +478,33 @@ const Todo: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Duration</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Duration
+                  </label>
                   <input
                     type="text"
                     value={newTodo.estimatedDuration || ""}
-                    onChange={(e) => setNewTodo({ ...newTodo, estimatedDuration: e.target.value })}
+                    onChange={e =>
+                      setNewTodo({
+                        ...newTodo,
+                        estimatedDuration: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., 1 hour"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date
+                  </label>
                   <input
                     type="date"
                     value={newTodo.dueDate || ""}
-                    onChange={(e) => setNewTodo({ ...newTodo, dueDate: e.target.value })}
+                    onChange={e =>
+                      setNewTodo({ ...newTodo, dueDate: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

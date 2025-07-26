@@ -71,7 +71,7 @@ const Events: React.FC = () => {
     }> = [];
 
     Object.entries(sampleEvents).forEach(([dateStr, events]) => {
-      events.forEach((event) => {
+      events.forEach(event => {
         allEvents.push({
           ...event,
           date: dateStr,
@@ -92,9 +92,9 @@ const Events: React.FC = () => {
     let filtered = allEvents;
 
     if (filterBy === "upcoming") {
-      filtered = allEvents.filter((event) => event.dateObj >= today);
+      filtered = allEvents.filter(event => event.dateObj >= today);
     } else if (filterBy === "past") {
-      filtered = allEvents.filter((event) => event.dateObj < today);
+      filtered = allEvents.filter(event => event.dateObj < today);
     }
 
     // Sort events
@@ -116,7 +116,7 @@ const Events: React.FC = () => {
     const yearStart = new Date(now.getFullYear(), 0, 1);
     const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
     const yearEvents = allEvents.filter(
-      (event) => event.dateObj >= yearStart && event.dateObj < yearEnd
+      event => event.dateObj >= yearStart && event.dateObj < yearEnd
     );
     const yearTotalHours =
       (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
@@ -132,7 +132,7 @@ const Events: React.FC = () => {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const monthEvents = allEvents.filter(
-      (event) => event.dateObj >= monthStart && event.dateObj < monthEnd
+      event => event.dateObj >= monthStart && event.dateObj < monthEnd
     );
     const monthTotalHours =
       (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
@@ -151,7 +151,7 @@ const Events: React.FC = () => {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 7);
     const weekEvents = allEvents.filter(
-      (event) => event.dateObj >= weekStart && event.dateObj < weekEnd
+      event => event.dateObj >= weekStart && event.dateObj < weekEnd
     );
     const weekTotalHours =
       (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
@@ -169,7 +169,7 @@ const Events: React.FC = () => {
     const dayEnd = new Date(dayStart);
     dayEnd.setDate(dayStart.getDate() + 1);
     const dayEvents = allEvents.filter(
-      (event) => event.dateObj >= dayStart && event.dateObj < dayEnd
+      event => event.dateObj >= dayStart && event.dateObj < dayEnd
     );
     const dayTotalHours = 24;
     const dayEventHours = dayEvents.reduce((total, event) => {
@@ -267,7 +267,7 @@ const Events: React.FC = () => {
               </label>
               <select
                 value={filterBy}
-                onChange={(e) =>
+                onChange={e =>
                   setFilterBy(e.target.value as "all" | "upcoming" | "past")
                 }
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -283,7 +283,7 @@ const Events: React.FC = () => {
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "date" | "title")}
+                onChange={e => setSortBy(e.target.value as "date" | "title")}
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="date">Date</option>
@@ -300,7 +300,7 @@ const Events: React.FC = () => {
         <div className="flex-1 overflow-auto p-6">
           {filteredEvents.length > 0 ? (
             <div className="space-y-4">
-              {filteredEvents.map((event) => {
+              {filteredEvents.map(event => {
                 const isPast = event.dateObj < today;
                 const isToday =
                   event.dateObj.toDateString() === today.toDateString();
@@ -312,8 +312,8 @@ const Events: React.FC = () => {
                       isPast
                         ? "bg-gray-50 border-gray-200"
                         : isToday
-                        ? "bg-blue-50 border-blue-200"
-                        : "bg-white border-gray-200 hover:border-blue-300"
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-white border-gray-200 hover:border-blue-300"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -380,8 +380,8 @@ const Events: React.FC = () => {
                 {filterBy === "upcoming"
                   ? "No upcoming events scheduled"
                   : filterBy === "past"
-                  ? "No past events found"
-                  : "No events in your calendar"}
+                    ? "No past events found"
+                    : "No events in your calendar"}
               </p>
               <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                 Add Event

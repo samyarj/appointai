@@ -263,7 +263,7 @@ const Calendar: React.FC = () => {
   // Navigation handlers
   const goPrev = () => {
     if (view === "month") {
-      setCurrent((c) => {
+      setCurrent(c => {
         let month = c.month - 1;
         let year = c.year;
         if (month < 0) {
@@ -273,14 +273,14 @@ const Calendar: React.FC = () => {
         return { ...c, month, year };
       });
     } else if (view === "year") {
-      setCurrent((c) => ({ ...c, year: c.year - 1 }));
+      setCurrent(c => ({ ...c, year: c.year - 1 }));
     } else if (view === "week") {
-      setCurrent((c) => {
+      setCurrent(c => {
         const d = new Date(c.year, c.month, c.day - 7);
         return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
       });
     } else if (view === "day") {
-      setCurrent((c) => {
+      setCurrent(c => {
         const d = new Date(c.year, c.month, c.day - 1);
         return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
       });
@@ -288,7 +288,7 @@ const Calendar: React.FC = () => {
   };
   const goNext = () => {
     if (view === "month") {
-      setCurrent((c) => {
+      setCurrent(c => {
         let month = c.month + 1;
         let year = c.year;
         if (month > 11) {
@@ -298,14 +298,14 @@ const Calendar: React.FC = () => {
         return { ...c, month, year };
       });
     } else if (view === "year") {
-      setCurrent((c) => ({ ...c, year: c.year + 1 }));
+      setCurrent(c => ({ ...c, year: c.year + 1 }));
     } else if (view === "week") {
-      setCurrent((c) => {
+      setCurrent(c => {
         const d = new Date(c.year, c.month, c.day + 7);
         return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
       });
     } else if (view === "day") {
-      setCurrent((c) => {
+      setCurrent(c => {
         const d = new Date(c.year, c.month, c.day + 1);
         return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
       });
@@ -332,7 +332,7 @@ const Calendar: React.FC = () => {
     return (
       <>
         <div className="grid grid-cols-7 gap-2 mb-4">
-          {daysOfWeek.map((d) => (
+          {daysOfWeek.map(d => (
             <div
               key={d}
               className="font-semibold text-center text-gray-600 py-2"
@@ -362,10 +362,10 @@ const Calendar: React.FC = () => {
                     isToday
                       ? "bg-blue-500 text-white font-bold shadow-lg"
                       : isPastDay
-                      ? "bg-gray-100 text-gray-400 border border-gray-150"
-                      : day
-                      ? "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
-                      : "text-gray-300"
+                        ? "bg-gray-100 text-gray-400 border border-gray-150"
+                        : day
+                          ? "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
+                          : "text-gray-300"
                   }
                   ${
                     hasEventsForDay && !isToday && !isPastDay
@@ -415,7 +415,7 @@ const Calendar: React.FC = () => {
 
     return (
       <div className="grid grid-cols-7 gap-2 mb-4">
-        {daysOfWeek.map((d) => (
+        {daysOfWeek.map(d => (
           <div key={d} className="font-semibold text-center text-gray-600 py-2">
             {d}
           </div>
@@ -438,8 +438,8 @@ const Calendar: React.FC = () => {
                   isToday
                     ? "bg-blue-500 text-white font-bold shadow-lg"
                     : isPastDay
-                    ? "bg-gray-100 text-gray-400 border border-gray-150"
-                    : "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
+                      ? "bg-gray-100 text-gray-400 border border-gray-150"
+                      : "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
                 }
                 ${
                   hasEventsForDay && !isToday && !isPastDay
@@ -486,7 +486,7 @@ const Calendar: React.FC = () => {
           >
             <div className="font-bold text-center mb-3 text-gray-700">{m}</div>
             <div className="grid grid-cols-7 gap-1 text-xs">
-              {daysOfWeek.map((d) => (
+              {daysOfWeek.map(d => (
                 <div
                   key={d}
                   className="font-semibold text-center text-gray-500"
@@ -521,10 +521,10 @@ const Calendar: React.FC = () => {
                           isToday
                             ? "bg-blue-500 text-white font-bold"
                             : isPastDay
-                            ? "bg-gray-100 text-gray-400"
-                            : day
-                            ? "bg-gray-50 text-gray-700 hover:bg-blue-50"
-                            : "text-gray-300"
+                              ? "bg-gray-100 text-gray-400"
+                              : day
+                                ? "bg-gray-50 text-gray-700 hover:bg-blue-50"
+                                : "text-gray-300"
                         }
                         ${
                           hasEventsForDay && !isToday && !isPastDay
@@ -561,7 +561,7 @@ const Calendar: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Events ({events.length})
             </h3>
-            {events.map((event) => (
+            {events.map(event => (
               <div
                 key={event.id}
                 className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
@@ -685,19 +685,19 @@ const Calendar: React.FC = () => {
               {view === "month"
                 ? `${months[current.month]} ${current.year}`
                 : view === "week"
-                ? `${months[current.month]} ${current.year}`
-                : view === "year"
-                ? current.year
-                : new Date(
-                    current.year,
-                    current.month,
-                    current.day
-                  ).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  ? `${months[current.month]} ${current.year}`
+                  : view === "year"
+                    ? current.year
+                    : new Date(
+                        current.year,
+                        current.month,
+                        current.day
+                      ).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
             </span>
 
             <button

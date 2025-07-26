@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">AppointAI</h1>
           </div>
           <div className="flex gap-6">
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <Link
                 key={item.path}
                 to={item.path}

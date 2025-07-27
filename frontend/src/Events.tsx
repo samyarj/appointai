@@ -1,86 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAPI } from "./api";
 
-// Sample events data (same as Calendar component)
-const sampleEvents: Record<
-  string,
-  Array<{
-    id: number;
-    startTime: string;
-    endTime: string;
-    title: string;
-    duration: string;
-  }>
-> = {
-  "2025-07-26": [
-    {
-      id: 1,
-      startTime: "09:00",
-      endTime: "10:00",
-      title: "Team Meeting",
-      duration: "1 hour",
-    },
-    {
-      id: 2,
-      startTime: "14:30",
-      endTime: "15:00",
-      title: "Doctor Appointment",
-      duration: "30 min",
-    },
-  ],
-  "2025-07-27": [
-    {
-      id: 3,
-      startTime: "10:00",
-      endTime: "10:45",
-      title: "Client Call",
-      duration: "45 min",
-    },
-  ],
-  "2025-07-28": [
-    {
-      id: 4,
-      startTime: "16:00",
-      endTime: "17:30",
-      title: "Gym Session",
-      duration: "1.5 hours",
-    },
-    {
-      id: 5,
-      startTime: "19:00",
-      endTime: "21:00",
-      title: "Dinner with Friends",
-      duration: "2 hours",
-    },
-  ],
+type Event = {
+  id: number;
+  user_id?: number;
+  category_id?: number;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  duration?: string;
+  createdAt?: string;
 };
 
 const Events: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([]);
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [filterBy, setFilterBy] = useState<"all" | "upcoming" | "past">("all");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchAPI("/api/events")
+      .then(data => {
+        setEvents(
+          data.map((e: any) => ({
+            ...e,
+            dateObj: new Date(e.date),
+          }))
+        );
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Get all events and format them
   const getAllEvents = () => {
-    const allEvents: Array<{
-      id: number;
-      date: string;
-      startTime: string;
-      endTime: string;
-      title: string;
-      duration: string;
-      dateObj: Date;
-    }> = [];
-
-    Object.entries(sampleEvents).forEach(([dateStr, events]) => {
-      events.forEach(event => {
-        allEvents.push({
-          ...event,
-          date: dateStr,
-          dateObj: new Date(dateStr),
-        });
-      });
-    });
-
-    return allEvents;
+    return events.map(e => ({ ...e, dateObj: new Date(e.date) }));
   };
 
   // Filter events based on filter criteria

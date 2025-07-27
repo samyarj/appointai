@@ -1,91 +1,30 @@
-// Sample data (in a real app, this would come from a database/API)
-const sampleEvents: Record<
-  string,
-  Array<{
-    id: number;
-    startTime: string;
-    endTime: string;
-    title: string;
-    duration: string;
-  }>
-> = {
-  "2025-07-26": [
-    {
-      id: 1,
-      startTime: "09:00",
-      endTime: "10:00",
-      title: "Team Meeting",
-      duration: "1 hour",
-    },
-    {
-      id: 2,
-      startTime: "14:30",
-      endTime: "15:00",
-      title: "Doctor Appointment",
-      duration: "30 min",
-    },
-  ],
-  "2025-07-27": [
-    {
-      id: 3,
-      startTime: "10:00",
-      endTime: "10:45",
-      title: "Client Call",
-      duration: "45 min",
-    },
-  ],
-  "2025-07-28": [
-    {
-      id: 4,
-      startTime: "16:00",
-      endTime: "17:30",
-      title: "Gym Session",
-      duration: "1.5 hours",
-    },
-    {
-      id: 5,
-      startTime: "19:00",
-      endTime: "21:00",
-      title: "Dinner with Friends",
-      duration: "2 hours",
-    },
-  ],
-};
-
-const sampleTodos = [
-  {
-    id: 1,
-    title: "Schedule dentist appointment",
-    completed: false,
-    priority: "medium",
-    dueDate: "2025-08-15",
-  },
-  {
-    id: 2,
-    title: "Plan birthday party",
-    completed: false,
-    priority: "high",
-    dueDate: "2025-08-10",
-  },
-  {
-    id: 3,
-    title: "Review quarterly reports",
-    completed: false,
-    priority: "high",
-    dueDate: "2025-07-30",
-  },
-  { id: 4, title: "Buy groceries", completed: true, priority: "low" },
-];
-
-const sampleCategories = [
-  { id: 1, name: "Work", usageCount: 15 },
-  { id: 2, name: "Personal", usageCount: 8 },
-  { id: 3, name: "Health", usageCount: 5 },
-  { id: 4, name: "Family", usageCount: 12 },
-  { id: 5, name: "Education", usageCount: 3 },
-];
+import React, { useEffect, useState } from "react";
+import { fetchAPI } from "./api";
 
 function App() {
+  const [events, setEvents] = useState<any[]>([]);
+  const [todos, setTodos] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchAPI("/api/events"),
+      fetchAPI("/api/todos"),
+      fetchAPI("/api/categories"),
+    ])
+      .then(([eventsData, todosData, categoriesData]) => {
+        setEvents(eventsData);
+        setTodos(todosData);
+        setCategories(categoriesData);
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   // Calculate statistics
   const getStatistics = () => {
     const today = new Date();
@@ -94,26 +33,21 @@ function App() {
     const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Events statistics
-    const allEvents = Object.entries(sampleEvents).flatMap(([date, events]) =>
-      events.map(event => ({ ...event, date }))
-    );
-
+    const allEvents = events.map(event => ({ ...event, date: event.date }));
     const totalEvents = allEvents.length;
-    const todayEvents =
-      sampleEvents[today.toISOString().split("T")[0]]?.length || 0;
-
+    const todayEvents = allEvents.filter(
+      event => event.date === today.toISOString().split("T")[0]
+    ).length;
     const weekEvents = allEvents.filter(event => {
       const eventDate = new Date(event.date);
       return eventDate >= thisWeekStart && eventDate <= today;
     }).length;
-
     const monthEvents = allEvents.filter(event => {
       const eventDate = new Date(event.date);
       return eventDate >= thisMonthStart && eventDate <= today;
     }).length;
-
-    // Calculate total event hours
     const totalEventHours = allEvents.reduce((total, event) => {
+      if (!event.startTime || !event.endTime) return total;
       const [startHour, startMin] = event.startTime.split(":").map(Number);
       const [endHour, endMin] = event.endTime.split(":").map(Number);
       const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
@@ -121,22 +55,22 @@ function App() {
     }, 0);
 
     // Todo statistics
-    const totalTodos = sampleTodos.length;
-    const completedTodos = sampleTodos.filter(todo => todo.completed).length;
+    const totalTodos = todos.length;
+    const completedTodos = todos.filter(todo => todo.completed).length;
     const pendingTodos = totalTodos - completedTodos;
-    const highPriorityTodos = sampleTodos.filter(
+    const highPriorityTodos = todos.filter(
       todo => todo.priority === "high" && !todo.completed
     ).length;
-
-    const overdueTodos = sampleTodos.filter(
-      todo => !todo.completed && todo.dueDate && new Date(todo.dueDate) < today
+    const overdueTodos = todos.filter(
+      todo =>
+        !todo.completed && todo.due_date && new Date(todo.due_date) < today
     ).length;
 
     // Category statistics
-    const totalCategories = sampleCategories.length;
-    const mostUsedCategory = sampleCategories.reduce(
-      (max, cat) => (cat.usageCount > max.usageCount ? cat : max),
-      sampleCategories[0]
+    const totalCategories = categories.length;
+    const mostUsedCategory = categories.reduce(
+      (max, cat) => (cat.usage_count > max.usage_count ? cat : max),
+      categories[0] || { name: "None", usage_count: 0 }
     );
 
     // Productivity metrics
@@ -165,6 +99,21 @@ function App() {
   };
 
   const stats = getStatistics();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="loader"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
@@ -452,13 +401,13 @@ function App() {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Most Active Day</span>
                   <span className="font-semibold text-purple-600">
-                    {Object.entries(sampleEvents)
+                    {Object.entries(events)
                       .reduce(
                         (max, [date, events]) =>
-                          events.length > (sampleEvents[max] || []).length
+                          events.length > (events[max] || []).length
                             ? date
                             : max,
-                        Object.keys(sampleEvents)[0] || "None"
+                        Object.keys(events)[0] || "None"
                       )
                       .split("-")
                       .reverse()
@@ -491,7 +440,7 @@ function App() {
                 </div>
               </div>
               <div className="space-y-3">
-                {sampleCategories.slice(0, 4).map(category => (
+                {categories.slice(0, 4).map(category => (
                   <div
                     key={category.id}
                     className="flex justify-between items-center"

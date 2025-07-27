@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAPI } from "./api";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const months = [
@@ -18,58 +19,13 @@ const months = [
 
 type ViewMode = "month" | "week" | "year" | "day";
 
-// Sample events data
-const sampleEvents: Record<
-  string,
-  Array<{
-    id: number;
-    startTime: string;
-    endTime: string;
-    title: string;
-    duration: string;
-  }>
-> = {
-  "2025-07-26": [
-    {
-      id: 1,
-      startTime: "09:00",
-      endTime: "10:00",
-      title: "Team Meeting",
-      duration: "1 hour",
-    },
-    {
-      id: 2,
-      startTime: "14:30",
-      endTime: "15:00",
-      title: "Doctor Appointment",
-      duration: "30 min",
-    },
-  ],
-  "2025-07-27": [
-    {
-      id: 3,
-      startTime: "10:00",
-      endTime: "10:45",
-      title: "Client Call",
-      duration: "45 min",
-    },
-  ],
-  "2025-07-28": [
-    {
-      id: 4,
-      startTime: "16:00",
-      endTime: "17:30",
-      title: "Gym Session",
-      duration: "1.5 hours",
-    },
-    {
-      id: 5,
-      startTime: "19:00",
-      endTime: "21:00",
-      title: "Dinner with Friends",
-      duration: "2 hours",
-    },
-  ],
+export type Event = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  title: string;
+  duration: string;
+  date: string;
 };
 
 function getDaysInMonth(year: number, month: number) {
@@ -88,17 +44,31 @@ const Calendar: React.FC = () => {
     month: today.getMonth(),
     day: today.getDate(),
   });
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchAPI("/api/events")
+      .then(data => {
+        setEvents(data);
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Helper function to get events for a date
   const getEventsForDate = (date: Date) => {
     const dateKey = date.toISOString().split("T")[0];
-    return sampleEvents[dateKey] || [];
+    return events.filter(e => e.date === dateKey);
   };
 
   // Helper function to check if a date has events
   const hasEvents = (date: Date) => {
     const dateKey = date.toISOString().split("T")[0];
-    return !!sampleEvents[dateKey];
+    return events.some(e => e.date === dateKey);
   };
 
   // Progress calculation functions
@@ -158,18 +128,24 @@ const Calendar: React.FC = () => {
   // Event density calculation
   const getEventDensityForView = () => {
     const getAllEventsInRange = (startDate: Date, endDate: Date) => {
-      const events: Array<{ startTime: string; endTime: string }> = [];
+      const eventsArr: Array<{ startTime: string; endTime: string }> = [];
       const currentDate = new Date(startDate);
 
       while (currentDate < endDate) {
         const dateKey = currentDate.toISOString().split("T")[0];
-        if (sampleEvents[dateKey]) {
-          events.push(...sampleEvents[dateKey]);
+        const dayEvents = events.filter((e: Event) => e.date === dateKey);
+        if (dayEvents.length > 0) {
+          eventsArr.push(
+            ...dayEvents.map((e: Event) => ({
+              startTime: e.startTime,
+              endTime: e.endTime,
+            }))
+          );
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      return events;
+      return eventsArr;
     };
 
     const calculateEventHours = (
@@ -607,6 +583,10 @@ const Calendar: React.FC = () => {
       </div>
     );
   }
+
+  // Render loading/error states
+  if (loading) return <div className="p-8 text-center">Loading events...</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">

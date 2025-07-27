@@ -1,68 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAPI } from "./api";
 
-type Priority = "low" | "medium" | "high";
-
-interface TodoItem {
+type TodoItem = {
   id: number;
+  user_id?: number;
+  category_id?: number;
   title: string;
-  description: string;
-  priority: Priority;
-  category: string;
-  estimatedDuration: string;
-  dueDate?: string;
+  description?: string;
+  priority?: "low" | "medium" | "high";
+  estimated_duration?: string;
+  due_date?: string;
   completed: boolean;
-  createdAt: Date;
-}
-
-// Sample todo data
-const initialTodos: TodoItem[] = [
-  {
-    id: 1,
-    title: "Schedule dentist appointment",
-    description: "Need to book a cleaning appointment for next month",
-    priority: "medium",
-    category: "Health",
-    estimatedDuration: "1 hour",
-    dueDate: "2025-08-15",
-    completed: false,
-    createdAt: new Date("2025-07-20"),
-  },
-  {
-    id: 2,
-    title: "Plan birthday party",
-    description: "Organize venue, cake, and guest list for mom's birthday",
-    priority: "high",
-    category: "Personal",
-    estimatedDuration: "3 hours",
-    dueDate: "2025-08-10",
-    completed: false,
-    createdAt: new Date("2025-07-18"),
-  },
-  {
-    id: 3,
-    title: "Review quarterly reports",
-    description: "Go through Q2 financial reports and prepare summary",
-    priority: "high",
-    category: "Work",
-    estimatedDuration: "2 hours",
-    dueDate: "2025-07-30",
-    completed: false,
-    createdAt: new Date("2025-07-25"),
-  },
-  {
-    id: 4,
-    title: "Buy groceries",
-    description: "Weekly grocery shopping",
-    priority: "low",
-    category: "Personal",
-    estimatedDuration: "1.5 hours",
-    completed: true,
-    createdAt: new Date("2025-07-24"),
-  },
-];
+  created_at?: string;
+};
 
 const Todo: React.FC = () => {
-  const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
   const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "created">(
@@ -72,10 +25,22 @@ const Todo: React.FC = () => {
     title: "",
     description: "",
     priority: "medium",
-    category: "",
-    estimatedDuration: "",
-    dueDate: "",
+    estimated_duration: "",
+    due_date: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchAPI("/api/todos")
+      .then(data => {
+        setTodos(data);
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const priorityColors = {
     low: "bg-green-100 text-green-800 border-green-200",
@@ -93,11 +58,11 @@ const Todo: React.FC = () => {
       title: newTodo.title.trim(),
       description: newTodo.description || "",
       priority: newTodo.priority || "medium",
-      category: newTodo.category || "General",
-      estimatedDuration: newTodo.estimatedDuration || "1 hour",
-      dueDate: newTodo.dueDate || undefined,
+      category_id: newTodo.category_id || 1,
+      estimated_duration: newTodo.estimated_duration || "1 hour",
+      due_date: newTodo.due_date || undefined,
       completed: false,
-      createdAt: new Date(),
+      created_at: new Date().toISOString(),
     };
 
     setTodos([...todos, todo]);
@@ -105,9 +70,8 @@ const Todo: React.FC = () => {
       title: "",
       description: "",
       priority: "medium",
-      category: "",
-      estimatedDuration: "",
-      dueDate: "",
+      estimated_duration: "",
+      due_date: "",
     });
     setShowAddForm(false);
   };
@@ -139,12 +103,14 @@ const Todo: React.FC = () => {
       if (sortBy === "priority") {
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       } else if (sortBy === "dueDate") {
-        if (!a.dueDate && !b.dueDate) return 0;
-        if (!a.dueDate) return 1;
-        if (!b.dueDate) return -1;
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
       } else if (sortBy === "created") {
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       }
       return 0;
     });
@@ -157,7 +123,7 @@ const Todo: React.FC = () => {
     const completed = todos.filter(t => t.completed).length;
     const pending = total - completed;
     const overdue = todos.filter(
-      t => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()
+      t => !t.completed && t.due_date && new Date(t.due_date) < new Date()
     ).length;
 
     return { total, completed, pending, overdue };
@@ -264,12 +230,56 @@ const Todo: React.FC = () => {
 
         {/* Todo List */}
         <div className="flex-1 overflow-auto p-6">
-          {filteredTodos.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4 animate-spin">
+                <svg
+                  className="w-8 h-8 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-500">Loading todos...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-400 text-6xl mb-4">
+                <svg
+                  className="w-8 h-8 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-500">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredTodos.length > 0 ? (
             <div className="space-y-4">
               {filteredTodos.map(todo => {
                 const isOverdue =
-                  todo.dueDate &&
-                  new Date(todo.dueDate) < new Date() &&
+                  todo.due_date &&
+                  new Date(todo.due_date) < new Date() &&
                   !todo.completed;
 
                 return (
@@ -320,13 +330,13 @@ const Todo: React.FC = () => {
                           </h3>
                           <span
                             className={`px-2 py-1 text-xs rounded-full border ${
-                              priorityColors[todo.priority]
+                              priorityColors[todo.priority || "medium"]
                             }`}
                           >
                             {todo.priority}
                           </span>
                           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                            {todo.category}
+                            {todo.category_id}
                           </span>
                           {isOverdue && (
                             <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
@@ -346,15 +356,18 @@ const Todo: React.FC = () => {
                         )}
 
                         <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                          <span>📅 Duration: {todo.estimatedDuration}</span>
-                          {todo.dueDate && (
+                          <span>📅 Duration: {todo.estimated_duration}</span>
+                          {todo.due_date && (
                             <span>
                               🗓️ Due:{" "}
-                              {new Date(todo.dueDate).toLocaleDateString()}
+                              {new Date(todo.due_date).toLocaleDateString()}
                             </span>
                           )}
                           <span>
-                            🕒 Created: {todo.createdAt.toLocaleDateString()}
+                            🕒 Created:{" "}
+                            {new Date(
+                              todo.created_at || ""
+                            ).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -449,7 +462,7 @@ const Todo: React.FC = () => {
                     onChange={e =>
                       setNewTodo({
                         ...newTodo,
-                        priority: e.target.value as Priority,
+                        priority: e.target.value as TodoItem["priority"],
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -466,9 +479,9 @@ const Todo: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={newTodo.category || ""}
+                    value={newTodo.category_id || ""}
                     onChange={e =>
-                      setNewTodo({ ...newTodo, category: e.target.value })
+                      setNewTodo({ ...newTodo, category_id: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Work, Personal"
@@ -483,11 +496,11 @@ const Todo: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={newTodo.estimatedDuration || ""}
+                    value={newTodo.estimated_duration || ""}
                     onChange={e =>
                       setNewTodo({
                         ...newTodo,
-                        estimatedDuration: e.target.value,
+                        estimated_duration: e.target.value,
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -501,9 +514,9 @@ const Todo: React.FC = () => {
                   </label>
                   <input
                     type="date"
-                    value={newTodo.dueDate || ""}
+                    value={newTodo.due_date || ""}
                     onChange={e =>
-                      setNewTodo({ ...newTodo, dueDate: e.target.value })
+                      setNewTodo({ ...newTodo, due_date: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />

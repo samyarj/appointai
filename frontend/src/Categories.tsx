@@ -1,81 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAPI } from "./api";
 
 interface Category {
   id: number;
   name: string;
   color: string;
   description: string;
-  createdAt: Date;
-  usageCount: number;
+  created_at: string;
+  usage_count: number;
 }
 
-// Sample categories data
-const initialCategories: Category[] = [
-  {
-    id: 1,
-    name: "Work",
-    color: "#3B82F6",
-    description: "Work-related events and tasks",
-    createdAt: new Date("2025-07-01"),
-    usageCount: 15,
-  },
-  {
-    id: 2,
-    name: "Personal",
-    color: "#10B981",
-    description: "Personal activities and appointments",
-    createdAt: new Date("2025-07-05"),
-    usageCount: 8,
-  },
-  {
-    id: 3,
-    name: "Health",
-    color: "#F59E0B",
-    description: "Medical appointments and health activities",
-    createdAt: new Date("2025-07-10"),
-    usageCount: 5,
-  },
-  {
-    id: 4,
-    name: "Family",
-    color: "#EF4444",
-    description: "Family events and gatherings",
-    createdAt: new Date("2025-07-15"),
-    usageCount: 12,
-  },
-  {
-    id: 5,
-    name: "Education",
-    color: "#8B5CF6",
-    description: "Learning and educational activities",
-    createdAt: new Date("2025-07-20"),
-    usageCount: 3,
-  },
-];
-
-const predefinedColors = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Yellow
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#06B6D4", // Cyan
-  "#84CC16", // Lime
-  "#F97316", // Orange
-  "#EC4899", // Pink
-  "#6B7280", // Gray
-];
-
 const Categories: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "usage" | "created">("name");
   const [newCategory, setNewCategory] = useState<Partial<Category>>({
     name: "",
-    color: predefinedColors[0],
+    color: "#3B82F6",
     description: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchAPI("/api/categories")
+      .then(data => {
+        setCategories(data);
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleAddCategory = () => {
     if (!newCategory.name?.trim()) return;
@@ -83,16 +40,16 @@ const Categories: React.FC = () => {
     const category: Category = {
       id: Math.max(...categories.map(c => c.id), 0) + 1,
       name: newCategory.name.trim(),
-      color: newCategory.color || predefinedColors[0],
+      color: newCategory.color || "#3B82F6",
       description: newCategory.description || "",
-      createdAt: new Date(),
-      usageCount: 0,
+      created_at: new Date().toISOString(),
+      usage_count: 0,
     };
 
     setCategories([...categories, category]);
     setNewCategory({
       name: "",
-      color: predefinedColors[0],
+      color: "#3B82F6",
       description: "",
     });
     setShowAddForm(false);
@@ -117,7 +74,7 @@ const Categories: React.FC = () => {
           ? {
               ...cat,
               name: newCategory.name!.trim(),
-              color: newCategory.color || predefinedColors[0],
+              color: newCategory.color || "#3B82F6",
               description: newCategory.description || "",
             }
           : cat
@@ -127,7 +84,7 @@ const Categories: React.FC = () => {
     setEditingCategory(null);
     setNewCategory({
       name: "",
-      color: predefinedColors[0],
+      color: "#3B82F6",
       description: "",
     });
     setShowAddForm(false);
@@ -148,9 +105,11 @@ const Categories: React.FC = () => {
       if (sortBy === "name") {
         return a.name.localeCompare(b.name);
       } else if (sortBy === "usage") {
-        return b.usageCount - a.usageCount;
+        return b.usage_count - a.usage_count;
       } else if (sortBy === "created") {
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       }
       return 0;
     });
@@ -158,14 +117,18 @@ const Categories: React.FC = () => {
 
   const getStats = () => {
     const total = categories.length;
-    const totalUsage = categories.reduce((sum, cat) => sum + cat.usageCount, 0);
+    const totalUsage = categories.reduce(
+      (sum, cat) => sum + cat.usage_count,
+      0
+    );
     const mostUsed = categories.reduce(
-      (max, cat) => (cat.usageCount > max.usageCount ? cat : max),
+      (max, cat) => (cat.usage_count > max.usage_count ? cat : max),
       categories[0]
     );
     const recent = categories.filter(
       cat =>
-        new Date().getTime() - cat.createdAt.getTime() < 7 * 24 * 60 * 60 * 1000
+        new Date().getTime() - new Date(cat.created_at).getTime() <
+        7 * 24 * 60 * 60 * 1000
     ).length;
 
     return { total, totalUsage, mostUsed, recent };
@@ -224,7 +187,7 @@ const Categories: React.FC = () => {
                 {stats.mostUsed?.name || "None"}
               </p>
               <p className="text-xs text-purple-600">
-                {stats.mostUsed?.usageCount || 0} uses
+                {stats.mostUsed?.usage_count || 0} uses
               </p>
             </div>
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
@@ -281,7 +244,44 @@ const Categories: React.FC = () => {
 
         {/* Categories Grid */}
         <div className="flex-1 overflow-auto p-6">
-          {sortedCategories.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <svg
+                className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <p className="text-gray-500">Loading categories...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <svg
+                className="w-16 h-16 text-red-400 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-500 mb-2">
+                Error loading categories
+              </h3>
+              <p className="text-gray-400">{error}</p>
+            </div>
+          ) : sortedCategories.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedCategories.map(category => (
                 <div
@@ -341,9 +341,10 @@ const Categories: React.FC = () => {
                     {category.description}
                   </p>
                   <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>{category.usageCount} uses</span>
+                    <span>{category.usage_count} uses</span>
                     <span>
-                      Created {category.createdAt.toLocaleDateString()}
+                      Created{" "}
+                      {new Date(category.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -422,7 +423,18 @@ const Categories: React.FC = () => {
                   Color
                 </label>
                 <div className="grid grid-cols-5 gap-2">
-                  {predefinedColors.map(color => (
+                  {[
+                    "#3B82F6",
+                    "#10B981",
+                    "#F59E0B",
+                    "#EF4444",
+                    "#8B5CF6",
+                    "#06B6D4",
+                    "#84CC16",
+                    "#F97316",
+                    "#EC4899",
+                    "#6B7280",
+                  ].map(color => (
                     <button
                       key={color}
                       onClick={() => setNewCategory({ ...newCategory, color })}
@@ -445,7 +457,7 @@ const Categories: React.FC = () => {
                   setEditingCategory(null);
                   setNewCategory({
                     name: "",
-                    color: predefinedColors[0],
+                    color: "#3B82F6",
                     description: "",
                   });
                 }}

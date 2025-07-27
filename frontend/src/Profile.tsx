@@ -1,33 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchAPI } from "./api";
 
-// Sample user data (in a real app, this would come from a database/API)
-const sampleUser = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  avatar: null, // No avatar URL, will show initials
-  joinDate: "2024-01-15",
-  timezone: "America/New_York",
-  dateFormat: "MM/DD/YYYY",
-  timeFormat: "12h",
-  theme: "light",
-  notifications: {
-    email: true,
-    push: false,
-    reminders: true,
-    weeklyDigest: true,
-  },
-  privacy: {
-    profileVisibility: "private",
-    showActivity: false,
-  },
+type UserProfile = {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  join_date?: string;
+  timezone?: string;
+  date_format?: string;
+  time_format?: string;
+  theme?: string;
+  notifications?: any;
+  privacy?: any;
 };
 
 type TabType = "profile" | "preferences" | "notifications" | "privacy";
 
 const Profile: React.FC = () => {
-  const [user, setUser] = useState(sampleUser);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchAPI("/api/profile")
+      .then(data => {
+        setUser(data);
+        setError(null);
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Get user initials for avatar
   const getUserInitials = (name: string) => {
@@ -41,7 +47,6 @@ const Profile: React.FC = () => {
 
   const handleSave = () => {
     setIsEditing(false);
-    // In a real app, this would save to backend
     console.log("Saving user data:", user);
   };
 
@@ -67,7 +72,7 @@ const Profile: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center space-x-6">
         <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-          {getUserInitials(user.name)}
+          {getUserInitials(user?.name || "")}
         </div>
         <div className="flex-1">
           <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
@@ -86,7 +91,7 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="text"
-            value={user.name}
+            value={user?.name}
             onChange={e => handleInputChange("name", e.target.value)}
             disabled={!isEditing}
             className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
@@ -103,7 +108,7 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="email"
-            value={user.email}
+            value={user?.email}
             onChange={e => handleInputChange("email", e.target.value)}
             disabled={!isEditing}
             className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
@@ -119,7 +124,7 @@ const Profile: React.FC = () => {
             Timezone
           </label>
           <select
-            value={user.timezone}
+            value={user?.timezone}
             onChange={e => handleInputChange("timezone", e.target.value)}
             disabled={!isEditing}
             className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
@@ -143,7 +148,7 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="text"
-            value={new Date(user.joinDate).toLocaleDateString()}
+            value={user?.join_date}
             disabled
             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
           />
@@ -160,7 +165,7 @@ const Profile: React.FC = () => {
             Date Format
           </label>
           <select
-            value={user.dateFormat}
+            value={user?.date_format}
             onChange={e => handleInputChange("dateFormat", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -175,7 +180,7 @@ const Profile: React.FC = () => {
             Time Format
           </label>
           <select
-            value={user.timeFormat}
+            value={user?.time_format}
             onChange={e => handleInputChange("timeFormat", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -189,7 +194,7 @@ const Profile: React.FC = () => {
             Theme
           </label>
           <select
-            value={user.theme}
+            value={user?.theme}
             onChange={e => handleInputChange("theme", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -215,7 +220,7 @@ const Profile: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user.notifications.email}
+              checked={user?.notifications?.email}
               onChange={e =>
                 handleNestedInputChange(
                   "notifications",
@@ -239,7 +244,7 @@ const Profile: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user.notifications.push}
+              checked={user?.notifications?.push}
               onChange={e =>
                 handleNestedInputChange(
                   "notifications",
@@ -261,7 +266,7 @@ const Profile: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user.notifications.reminders}
+              checked={user?.notifications?.reminders}
               onChange={e =>
                 handleNestedInputChange(
                   "notifications",
@@ -285,7 +290,7 @@ const Profile: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user.notifications.weeklyDigest}
+              checked={user?.notifications?.weeklyDigest}
               onChange={e =>
                 handleNestedInputChange(
                   "notifications",
@@ -311,7 +316,7 @@ const Profile: React.FC = () => {
             Choose who can see your profile
           </p>
           <select
-            value={user.privacy.profileVisibility}
+            value={user?.privacy?.profileVisibility}
             onChange={e =>
               handleNestedInputChange(
                 "privacy",
@@ -337,7 +342,7 @@ const Profile: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user.privacy.showActivity}
+              checked={user?.privacy?.showActivity}
               onChange={e =>
                 handleNestedInputChange(
                   "privacy",
@@ -365,6 +370,22 @@ const Profile: React.FC = () => {
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">

@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .db import SessionLocal
+from .models import User, Category, Event, Todo
 
 app = FastAPI(
     title="AppointAI API",

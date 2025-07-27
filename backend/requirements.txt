@@ -8,7 +8,8 @@ python-multipart==0.0.20
 
 # FastAPI CLI for development
 fastapi-cli==0.0.7
-
+sqlalchemy
+psycopg2-binary
 # Development dependencies
 # pytest==7.4.0
 # httpx==0.24.1

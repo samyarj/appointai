@@ -1,148 +1,242 @@
-# AppointAI - Appointment Scheduling System
+# AppointAI - Calendar & Task Management App
 
-A full-stack appointment scheduling application built with FastAPI (backend) and React (frontend).
+A modern calendar and task management application built with FastAPI (backend) and React (frontend) with JWT authentication.
 
-## 🏗️ Project Structure
+## Features
 
-```
-appointai/
-├── backend/          # FastAPI Python backend
-│   ├── main.py       # FastAPI application
-│   ├── requirements.txt
-│   └── README.md     # Backend-specific docs
-├── frontend/         # React TypeScript frontend
-│   ├── src/
-│   ├── package.json
-│   └── README.md     # Frontend-specific docs
-└── README.md         # This file
-```
+- 🔐 **JWT Authentication** - Secure login with email and password
+- 📅 **Calendar Management** - Create and manage events
+- ✅ **Task Management** - Todo lists with priorities
+- 🏷️ **Categories** - Organize events and tasks
+- 👤 **User Profiles** - Personalized user experience
+- 📊 **Dashboard Analytics** - Track productivity and progress
 
-## 🚀 Quick Start
+## Tech Stack
+
+### Backend
+
+- **FastAPI** - Modern Python web framework
+- **SQLAlchemy** - Database ORM
+- **PostgreSQL** - Database
+- **JWT** - Token-based authentication
+- **bcrypt** - Password hashing
+
+### Frontend
+
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **React Router** - Client-side routing
+- **Vite** - Build tool
+
+## Setup Instructions
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.8+
 - Node.js 18+
-- npm or yarn
+- PostgreSQL database
 
-### 1. Backend Setup (FastAPI)
+### Backend Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd appointai/backend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up environment variables**
+
+   ```bash
+   cp env.example .env
+   ```
+
+   Edit `.env` file with your configuration:
+
+   ```env
+   DATABASE_URL=postgresql://user:password@localhost/appointai
+   SECRET_KEY=your-secret-key-change-in-production
+   FRONTEND_URL=http://localhost:5173
+   ```
+
+4. **Run database migration**
+
+   ```bash
+   python migrate.py
+   ```
+
+5. **Start the backend server**
+   ```bash
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
+
+   ```bash
+   cd ../frontend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create `.env` file:
+
+   ```env
+   VITE_API_URL=http://localhost:8000
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+## Usage
+
+1. **Access the application**
+
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+2. **Authentication Flow**
+
+   - Click "Sign up" to create a new account
+   - Or click "Sign in" if you already have an account
+   - Enter your email and password
+   - You'll be redirected to the dashboard
+
+3. **Features**
+   - **Dashboard**: View your activity overview and statistics
+   - **Events**: Create and manage calendar events
+   - **Todos**: Manage tasks with priorities and due dates
+   - **Categories**: Organize your events and tasks
+   - **Profile**: Update your personal settings
+
+## API Endpoints
+
+### Authentication
+
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login with email and password
+- `GET /api/auth/me` - Get current user info
+
+### Events
+
+- `GET /api/events` - Get user's events
+- `POST /api/events` - Create new event
+
+### Todos
+
+- `GET /api/todos` - Get user's todos
+- `POST /api/todos` - Create new todo
+
+### Categories
+
+- `GET /api/categories` - Get all categories
+- `POST /api/categories` - Create new category
+
+### Profile
+
+- `GET /api/profile` - Get user profile
+- `PUT /api/profile` - Update user profile
+
+## Database Schema
+
+### Users
+
+- Basic user information (name, email, password_hash)
+- Preferences (timezone, date format, theme)
+- Settings (notifications, privacy)
+
+### Events
+
+- Event details (title, date, time)
+- User association
+- Category association
+
+### Todos
+
+- Task information (title, description, priority)
+- Due dates and completion status
+- User and category association
+
+### Categories
+
+- Category name, color, and description
+- Usage statistics
+
+## Security Features
+
+- **JWT Tokens** - Secure authentication
+- **Password Hashing** - bcrypt for secure password storage
+- **User Isolation** - Each user sees only their data
+- **Token Expiration** - Automatic session management
+- **HTTPS Ready** - Production-ready security
+
+## Development
+
+### Backend Development
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+# Run with auto-reload
+uvicorn main:app --reload
+
+# Run tests
+pytest
+
+# Format code
+black .
 ```
 
-### 2. Frontend Setup (React)
+### Frontend Development
 
 ```bash
-cd frontend
-npm install
-```
-
-### 3. Run Development Servers
-
-**Terminal 1 - Backend:**
-
-```bash
-cd backend
-source .venv/bin/activate
-fastapi dev main.py
-# Server: http://localhost:8000
-# API Docs: http://localhost:8000/docs
-```
-
-**Terminal 2 - Frontend:**
-
-```bash
-cd frontend
+# Start development server
 npm run dev
-# Server: http://localhost:5173
+
+# Build for production
+npm run build
+
+# Lint code
+npm run lint
 ```
 
-## 🔗 API Integration
-
-The frontend is configured to communicate with the backend API:
-
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:5173`
-- CORS is configured for local development
-
-## 📁 Development
-
-### Backend (FastAPI)
-
-- **Framework:** FastAPI with Uvicorn
-- **Language:** Python 3.11
-- **Features:** Auto-generated API docs, CORS enabled
-- **Development:** Hot reload enabled
-
-### Frontend (React)
-
-- **Framework:** React with TypeScript
-- **Build Tool:** Vite
-- **Features:** Hot reload, TypeScript support
-- **Development:** Fast refresh enabled
-
-## 🛠️ Available Scripts
+## Production Deployment
 
 ### Backend
 
-```bash
-cd backend
-fastapi dev main.py    # Development server
-uvicorn main:app --reload  # Alternative dev server
-pip freeze > requirements.txt  # Update dependencies
-```
+1. Set up PostgreSQL database
+2. Configure environment variables
+3. Set up reverse proxy (nginx)
+4. Use gunicorn for production server
 
 ### Frontend
 
-```bash
-cd frontend
-npm run dev      # Development server
-npm run build    # Production build
-npm run preview  # Preview production build
-npm run lint     # Run ESLint
-```
+1. Build the application: `npm run build`
+2. Serve static files with nginx
+3. Configure CORS for production domains
 
-## 🔧 Environment Variables
-
-Create `.env` files in respective directories:
-
-**backend/.env:**
-
-```
-DATABASE_URL=sqlite:///./app.db
-SECRET_KEY=your-secret-key
-```
-
-**frontend/.env:**
-
-```
-VITE_API_URL=http://localhost:8000
-```
-
-## 📦 Deployment
-
-### Backend
-
-- Can be deployed to any platform supporting Python (Heroku, Railway, DigitalOcean, AWS, etc.)
-- Requires Python 3.11+ and pip
-
-### Frontend
-
-- Can be deployed to any static hosting (Vercel, Netlify, GitHub Pages, etc.)
-- Build output is in `frontend/dist/`
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test both backend and frontend
+4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.

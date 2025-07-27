@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .models import Base
+from models import Base
 
 DATABASE_URL = "postgresql://postgres:luke123!@localhost:5433/appointAI_db"
 try:

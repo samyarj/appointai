@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchAPI } from "./api";
+import { useAuth } from "./contexts/AuthContext";
 
 type UserProfile = {
   id: number;
@@ -18,6 +19,7 @@ type UserProfile = {
 type TabType = "profile" | "preferences" | "notifications" | "privacy";
 
 const Profile: React.FC = () => {
+  const { logout } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isEditing, setIsEditing] = useState(false);
@@ -418,12 +420,20 @@ const Profile: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Edit Profile
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
               )}
             </div>
           </div>

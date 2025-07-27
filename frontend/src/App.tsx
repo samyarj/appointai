@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { fetchAPI } from "./api";
+import { useAuth } from "./contexts/AuthContext";
 
-function App() {
+// Dashboard Component
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [todos, setTodos] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -121,10 +124,31 @@ function App() {
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-            <p className="text-gray-600">
-              Welcome back! Here's your activity overview.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                  Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  Welcome back, {user?.name}! Here's your activity overview.
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                {user?.avatar && (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                )}
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Quick Stats Cards */}
@@ -197,7 +221,7 @@ function App() {
                 </div>
                 <div className="bg-purple-500 rounded-full p-3">
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -451,12 +475,12 @@ function App() {
                         <div
                           className="bg-purple-500 h-2 rounded-full"
                           style={{
-                            width: `${(category.usageCount / 15) * 100}%`,
+                            width: `${(category.usage_count / 15) * 100}%`,
                           }}
                         ></div>
                       </div>
                       <span className="text-sm font-medium text-gray-700">
-                        {category.usageCount}
+                        {category.usage_count}
                       </span>
                     </div>
                   </div>
@@ -476,6 +500,11 @@ function App() {
       </div>
     </div>
   );
-}
+};
+
+// Main App Component
+const App: React.FC = () => {
+  return <Dashboard />;
+};
 
 export default App;

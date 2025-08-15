@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchAPI } from "./api";
+import { eventAPI, categoryAPI } from "./api";
 
 type Event = {
   id: number;
@@ -13,157 +13,302 @@ type Event = {
   createdAt?: string;
 };
 
+interface Category {
+  id: number;
+  name: string;
+  color: string;
+  description: string;
+  created_at: string;
+  usage_count: number;
+}
+
 const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [sortBy, setSortBy] = useState<"date" | "title" | "created">("date");
   const [filterBy, setFilterBy] = useState<"all" | "upcoming" | "past">("all");
+  const [newEvent, setNewEvent] = useState<Partial<Event>>({
+    title: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    duration: "",
+    category_id: undefined,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState<{
+    type: "idle" | "loading" | "success" | "error";
+    message: string;
+  }>({ type: "idle", message: "" });
 
+  // Load events and categories on component mount
   useEffect(() => {
-    setLoading(true);
-    fetchAPI("/api/events")
-      .then(data => {
-        setEvents(
-          data.map((e: any) => ({
-            ...e,
-            dateObj: new Date(e.date),
-          }))
-        );
-        setError(null);
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    loadEvents();
+    loadCategories();
   }, []);
 
-  // Get all events and format them
-  const getAllEvents = () => {
-    return events.map(e => ({ ...e, dateObj: new Date(e.date) }));
+  const loadEvents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await eventAPI.getEvents();
+      setEvents(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load events");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter events based on filter criteria
-  const getFilteredEvents = () => {
-    const allEvents = getAllEvents();
+  const loadCategories = async () => {
+    try {
+      const data = await categoryAPI.getCategories();
+      setCategories(data);
+    } catch (e) {
+      console.error("Failed to load categories:", e);
+    }
+  };
+
+  const showStatus = (type: "success" | "error", message: string) => {
+    setActionStatus({ type, message });
+    setTimeout(
+      () => {
+        setActionStatus({ type: "idle", message: "" });
+      },
+      type === "success" ? 3000 : 5000
+    );
+  };
+
+  const calculateDuration = (startTime: string, endTime: string): string => {
+    if (!startTime || !endTime) return "";
+
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+
+    const startTotalMin = startHour * 60 + startMin;
+    const endTotalMin = endHour * 60 + endMin;
+    const durationMin = endTotalMin - startTotalMin;
+
+    if (durationMin <= 0) return "";
+
+    const hours = Math.floor(durationMin / 60);
+    const minutes = durationMin % 60;
+
+    if (hours === 0) return `${minutes}m`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  };
+
+  const handleAddEvent = async () => {
+    if (!newEvent.title?.trim()) {
+      showStatus("error", "Event title cannot be empty.");
+      return;
+    }
+    if (!newEvent.date || !newEvent.startTime || !newEvent.endTime) {
+      showStatus("error", "Date, start time, and end time are required.");
+      return;
+    }
+
+    setActionStatus({ type: "loading", message: "Creating event..." });
+
+    try {
+      const duration = calculateDuration(
+        newEvent.startTime!,
+        newEvent.endTime!
+      );
+      const eventData = {
+        title: newEvent.title.trim(),
+        date: newEvent.date,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        duration: duration,
+        category_id: newEvent.category_id,
+      };
+
+      const createdEvent = await eventAPI.createEvent(eventData);
+      setEvents([...events, createdEvent]);
+      setNewEvent({
+        title: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        duration: "",
+        category_id: undefined,
+      });
+      setShowAddForm(false);
+      showStatus("success", "Event created successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to create event";
+      showStatus("error", errorMessage);
+    }
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setNewEvent({
+      title: event.title,
+      date: event.date,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      duration: event.duration,
+      category_id: event.category_id,
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !newEvent.title?.trim()) {
+      showStatus("error", "Event title cannot be empty.");
+      return;
+    }
+    if (!newEvent.date || !newEvent.startTime || !newEvent.endTime) {
+      showStatus("error", "Date, start time, and end time are required.");
+      return;
+    }
+
+    setActionStatus({ type: "loading", message: "Updating event..." });
+
+    try {
+      const duration = calculateDuration(
+        newEvent.startTime!,
+        newEvent.endTime!
+      );
+      const eventData = {
+        title: newEvent.title.trim(),
+        date: newEvent.date,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        duration: duration,
+        category_id: newEvent.category_id,
+      };
+
+      const updatedEvent = await eventAPI.updateEvent(
+        editingEvent.id,
+        eventData
+      );
+      setEvents(
+        events.map(event =>
+          event.id === editingEvent.id ? updatedEvent : event
+        )
+      );
+      setEditingEvent(null);
+      setNewEvent({
+        title: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        duration: "",
+        category_id: undefined,
+      });
+      setShowAddForm(false);
+      showStatus("success", "Event updated successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to update event";
+      showStatus("error", errorMessage);
+    }
+  };
+
+  const handleDeleteEvent = async (id: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this event? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setActionStatus({ type: "loading", message: "Deleting event..." });
+
+    try {
+      await eventAPI.deleteEvent(id);
+      setEvents(events.filter(event => event.id !== id));
+      showStatus("success", "Event deleted successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to delete event";
+      showStatus("error", errorMessage);
+    }
+  };
+
+  const getFilteredAndSortedEvents = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let filtered = allEvents;
+    let filtered = events;
 
+    // Apply filter
     if (filterBy === "upcoming") {
-      filtered = allEvents.filter(event => event.dateObj >= today);
+      filtered = events.filter(event => {
+        const eventDate = new Date(event.date + "T00:00:00");
+        return eventDate >= today;
+      });
     } else if (filterBy === "past") {
-      filtered = allEvents.filter(event => event.dateObj < today);
+      filtered = events.filter(event => {
+        const eventDate = new Date(event.date + "T00:00:00");
+        return eventDate < today;
+      });
     }
 
-    // Sort events
-    if (sortBy === "date") {
-      filtered.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
-    } else if (sortBy === "title") {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    }
+    // Apply sort
+    filtered.sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      } else if (sortBy === "title") {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === "created") {
+        const aCreated = a.createdAt || "";
+        const bCreated = b.createdAt || "";
+        return new Date(bCreated).getTime() - new Date(aCreated).getTime();
+      }
+      return 0;
+    });
 
     return filtered;
   };
 
-  // Calculate event density for different time periods
-  const getEventDensity = () => {
-    const now = new Date();
-    const allEvents = getAllEvents();
+  const getStats = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Year density
-    const yearStart = new Date(now.getFullYear(), 0, 1);
-    const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
-    const yearEvents = allEvents.filter(
-      event => event.dateObj >= yearStart && event.dateObj < yearEnd
-    );
-    const yearTotalHours =
-      (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60);
-    const yearEventHours = yearEvents.reduce((total, event) => {
-      const [startHour, startMin] = event.startTime.split(":").map(Number);
-      const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
-      return total + duration / 60;
-    }, 0);
-    const yearDensity = (yearEventHours / yearTotalHours) * 100;
+    const total = events.length;
+    const upcoming = events.filter(e => {
+      const eventDate = new Date(e.date + "T00:00:00");
+      return eventDate >= today;
+    }).length;
+    const past = events.filter(e => {
+      const eventDate = new Date(e.date + "T00:00:00");
+      return eventDate < today;
+    }).length;
+    const thisMonth = events.filter(e => {
+      const eventDate = new Date(e.date + "T00:00:00");
+      return (
+        eventDate.getMonth() === today.getMonth() &&
+        eventDate.getFullYear() === today.getFullYear()
+      );
+    }).length;
 
-    // Month density
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const monthEvents = allEvents.filter(
-      event => event.dateObj >= monthStart && event.dateObj < monthEnd
-    );
-    const monthTotalHours =
-      (monthEnd.getTime() - monthStart.getTime()) / (1000 * 60 * 60);
-    const monthEventHours = monthEvents.reduce((total, event) => {
-      const [startHour, startMin] = event.startTime.split(":").map(Number);
-      const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
-      return total + duration / 60;
-    }, 0);
-    const monthDensity = (monthEventHours / monthTotalHours) * 100;
-
-    // Week density
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay());
-    weekStart.setHours(0, 0, 0, 0);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 7);
-    const weekEvents = allEvents.filter(
-      event => event.dateObj >= weekStart && event.dateObj < weekEnd
-    );
-    const weekTotalHours =
-      (weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60);
-    const weekEventHours = weekEvents.reduce((total, event) => {
-      const [startHour, startMin] = event.startTime.split(":").map(Number);
-      const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
-      return total + duration / 60;
-    }, 0);
-    const weekDensity = (weekEventHours / weekTotalHours) * 100;
-
-    // Day density
-    const dayStart = new Date(now);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayStart.getDate() + 1);
-    const dayEvents = allEvents.filter(
-      event => event.dateObj >= dayStart && event.dateObj < dayEnd
-    );
-    const dayTotalHours = 24;
-    const dayEventHours = dayEvents.reduce((total, event) => {
-      const [startHour, startMin] = event.startTime.split(":").map(Number);
-      const [endHour, endMin] = event.endTime.split(":").map(Number);
-      const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
-      return total + duration / 60;
-    }, 0);
-    const dayDensity = (dayEventHours / dayTotalHours) * 100;
-
-    return {
-      year: {
-        density: yearDensity,
-        events: yearEvents.length,
-        hours: yearEventHours,
-      },
-      month: {
-        density: monthDensity,
-        events: monthEvents.length,
-        hours: monthEventHours,
-      },
-      week: {
-        density: weekDensity,
-        events: weekEvents.length,
-        hours: weekEventHours,
-      },
-      day: {
-        density: dayDensity,
-        events: dayEvents.length,
-        hours: dayEventHours,
-      },
-    };
+    return { total, upcoming, past, thisMonth };
   };
 
-  const filteredEvents = getFilteredEvents();
-  const eventDensity = getEventDensity();
+  const getCategoryName = (categoryId?: number) => {
+    if (!categoryId) return "Uncategorized";
+    const category = categories.find(c => c.id === categoryId);
+    return category ? category.name : "Unknown";
+  };
+
+  const getCategoryColor = (categoryId?: number) => {
+    if (!categoryId) return "#6B7280";
+    const category = categories.find(c => c.id === categoryId);
+    return category ? category.color : "#6B7280";
+  };
+
+  const filteredEvents = getFilteredAndSortedEvents();
+  const stats = getStats();
   const today = new Date();
 
   return (
@@ -171,49 +316,69 @@ const Events: React.FC = () => {
       <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">All Events</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-800">Events</h1>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                showAddForm
+                  ? "bg-gray-500 text-white hover:bg-gray-600"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              {showAddForm ? <>✕ Cancel</> : <>+ Add Event</>}
+            </button>
+          </div>
 
-          {/* Event Density Cards */}
+          {/* Status Display */}
+          {actionStatus.type !== "idle" && (
+            <div className="mb-4">
+              {actionStatus.type === "loading" && (
+                <div className="flex items-center text-blue-600 bg-blue-50 p-3 rounded-lg">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  {actionStatus.message}
+                </div>
+              )}
+              {actionStatus.type === "success" && (
+                <div className="flex items-center text-green-600 bg-green-50 p-3 rounded-lg">
+                  ✓ {actionStatus.message}
+                </div>
+              )}
+              {actionStatus.type === "error" && (
+                <div className="flex items-center text-red-600 bg-red-50 p-3 rounded-lg">
+                  ✗ {actionStatus.message}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 text-sm">Year</h3>
-              <p className="text-2xl font-bold text-blue-900">
-                {eventDensity.year.density.toFixed(1)}%
-              </p>
-              <p className="text-xs text-blue-600">
-                {eventDensity.year.events} events,{" "}
-                {eventDensity.year.hours.toFixed(1)}h
-              </p>
+              <h3 className="font-semibold text-blue-800 text-sm">Total</h3>
+              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+              <p className="text-xs text-blue-600">Events</p>
             </div>
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 text-sm">Month</h3>
+              <h3 className="font-semibold text-green-800 text-sm">Upcoming</h3>
               <p className="text-2xl font-bold text-green-900">
-                {eventDensity.month.density.toFixed(1)}%
+                {stats.upcoming}
               </p>
-              <p className="text-xs text-green-600">
-                {eventDensity.month.events} events,{" "}
-                {eventDensity.month.hours.toFixed(1)}h
-              </p>
+              <p className="text-xs text-green-600">Scheduled</p>
             </div>
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 text-sm">Week</h3>
-              <p className="text-2xl font-bold text-purple-900">
-                {eventDensity.week.density.toFixed(1)}%
-              </p>
-              <p className="text-xs text-purple-600">
-                {eventDensity.week.events} events,{" "}
-                {eventDensity.week.hours.toFixed(1)}h
-              </p>
+              <h3 className="font-semibold text-purple-800 text-sm">Past</h3>
+              <p className="text-2xl font-bold text-purple-900">{stats.past}</p>
+              <p className="text-xs text-purple-600">Completed</p>
             </div>
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
-              <h3 className="font-semibold text-orange-800 text-sm">Today</h3>
+              <h3 className="font-semibold text-orange-800 text-sm">
+                This Month
+              </h3>
               <p className="text-2xl font-bold text-orange-900">
-                {eventDensity.day.density.toFixed(1)}%
+                {stats.thisMonth}
               </p>
-              <p className="text-xs text-orange-600">
-                {eventDensity.day.events} events,{" "}
-                {eventDensity.day.hours.toFixed(1)}h
-              </p>
+              <p className="text-xs text-orange-600">Events</p>
             </div>
           </div>
 
@@ -223,30 +388,71 @@ const Events: React.FC = () => {
               <label className="text-sm font-medium text-gray-600">
                 Filter:
               </label>
-              <select
-                value={filterBy}
-                onChange={e =>
-                  setFilterBy(e.target.value as "all" | "upcoming" | "past")
-                }
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  filterBy === "all"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setFilterBy("all")}
               >
-                <option value="all">All Events</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="past">Past</option>
-              </select>
+                All
+              </button>
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  filterBy === "upcoming"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setFilterBy("upcoming")}
+              >
+                Upcoming
+              </button>
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  filterBy === "past"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setFilterBy("past")}
+              >
+                Past
+              </button>
             </div>
             <div className="flex gap-2">
               <label className="text-sm font-medium text-gray-600">
                 Sort by:
               </label>
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value as "date" | "title")}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === "date"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setSortBy("date")}
               >
-                <option value="date">Date</option>
-                <option value="title">Title</option>
-              </select>
+                Date
+              </button>
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === "title"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setSortBy("title")}
+              >
+                Title
+              </button>
+              <button
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === "created"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => setSortBy("created")}
+              >
+                Created
+              </button>
             </div>
             <div className="text-sm text-gray-500">
               Showing {filteredEvents.length} events
@@ -256,95 +462,265 @@ const Events: React.FC = () => {
 
         {/* Events List */}
         <div className="flex-1 overflow-auto p-6">
-          {filteredEvents.length > 0 ? (
-            <div className="space-y-4">
-              {filteredEvents.map(event => {
-                const isPast = event.dateObj < today;
-                const isToday =
-                  event.dateObj.toDateString() === today.toDateString();
-
-                return (
-                  <div
-                    key={`${event.date}-${event.id}`}
-                    className={`border rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
-                      isPast
-                        ? "bg-gray-50 border-gray-200"
-                        : isToday
-                          ? "bg-blue-50 border-blue-200"
-                          : "bg-white border-gray-200 hover:border-blue-300"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3
-                            className={`font-semibold text-lg ${
-                              isPast ? "text-gray-600" : "text-gray-800"
-                            }`}
-                          >
-                            {event.title}
-                          </h3>
-                          {isToday && (
-                            <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
-                              Today
-                            </span>
-                          )}
-                          {isPast && (
-                            <span className="px-2 py-1 bg-gray-400 text-white text-xs rounded-full">
-                              Past
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          className={`flex items-center gap-4 text-sm ${
-                            isPast ? "text-gray-500" : "text-gray-600"
-                          }`}
-                        >
-                          <span className="font-medium">
-                            📅{" "}
-                            {event.dateObj.toLocaleDateString("en-US", {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </span>
-                          <span className="font-medium">
-                            🕐 {event.startTime} - {event.endTime}
-                          </span>
-                          <span>⏱️ {event.duration}</span>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
-                          Edit
-                        </button>
-                        <button className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors">
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading events...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-400 text-6xl mb-4">⚠️</div>
+              <h3 className="text-lg font-medium text-gray-500 mb-2">
+                Error loading events
+              </h3>
+              <p className="text-gray-400">{error}</p>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📅</div>
-              <h3 className="text-lg font-medium text-gray-500 mb-2">
-                No events found
-              </h3>
-              <p className="text-gray-400 mb-6">
-                {filterBy === "upcoming"
-                  ? "No upcoming events scheduled"
-                  : filterBy === "past"
-                    ? "No past events found"
-                    : "No events in your calendar"}
-              </p>
-              <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                Add Event
-              </button>
-            </div>
+            <>
+              {/* Add/Edit Event Form */}
+              {showAddForm && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    {editingEvent ? "Edit Event" : "Add New Event"}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Event Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.title || ""}
+                        onChange={e =>
+                          setNewEvent({ ...newEvent, title: e.target.value })
+                        }
+                        placeholder="Enter event title"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={newEvent.date || ""}
+                        onChange={e =>
+                          setNewEvent({ ...newEvent, date: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category
+                      </label>
+                      <select
+                        value={newEvent.category_id || ""}
+                        onChange={e =>
+                          setNewEvent({
+                            ...newEvent,
+                            category_id: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Time *
+                      </label>
+                      <input
+                        type="time"
+                        value={newEvent.startTime || ""}
+                        onChange={e =>
+                          setNewEvent({
+                            ...newEvent,
+                            startTime: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Time *
+                      </label>
+                      <input
+                        type="time"
+                        value={newEvent.endTime || ""}
+                        onChange={e =>
+                          setNewEvent({ ...newEvent, endTime: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={
+                        editingEvent ? handleUpdateEvent : handleAddEvent
+                      }
+                      className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                    >
+                      {editingEvent ? "Update Event" : "Add Event"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditingEvent(null);
+                        setNewEvent({
+                          title: "",
+                          date: "",
+                          startTime: "",
+                          endTime: "",
+                          duration: "",
+                          category_id: undefined,
+                        });
+                      }}
+                      className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Events List */}
+              {filteredEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredEvents.map(event => {
+                    // Parse date string properly to avoid timezone issues
+                    const eventDate = new Date(event.date + "T00:00:00");
+                    const isPast = eventDate < today;
+                    const isToday =
+                      eventDate.toDateString() === today.toDateString();
+                    const categoryColor = getCategoryColor(event.category_id);
+
+                    return (
+                      <div
+                        key={event.id}
+                        className={`border rounded-xl p-6 transition-all duration-200 hover:shadow-md ${
+                          isPast
+                            ? "bg-gray-50 border-gray-200"
+                            : isToday
+                              ? "bg-blue-50 border-blue-200"
+                              : "bg-white border-gray-200 hover:border-blue-300"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div
+                                className="w-4 h-4 rounded-full"
+                                style={{ backgroundColor: categoryColor }}
+                              ></div>
+                              <h3
+                                className={`font-semibold text-xl ${
+                                  isPast ? "text-gray-600" : "text-gray-800"
+                                }`}
+                              >
+                                {event.title}
+                              </h3>
+                              {isToday && (
+                                <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-medium">
+                                  Today
+                                </span>
+                              )}
+                              {isPast && (
+                                <span className="px-2 py-1 bg-gray-400 text-white text-xs rounded-full font-medium">
+                                  Past
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className={`space-y-2 text-sm ${
+                                isPast ? "text-gray-500" : "text-gray-600"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>📅</span>
+                                <span className="font-medium">
+                                  {eventDate.toLocaleDateString("en-US", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                  <span>🕐</span>
+                                  <span className="font-medium">
+                                    {event.startTime} - {event.endTime}
+                                  </span>
+                                </div>
+                                {event.duration && (
+                                  <div className="flex items-center gap-2">
+                                    <span>⏱️</span>
+                                    <span>{event.duration}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <span>🏷️</span>
+                                  <span>
+                                    {getCategoryName(event.category_id)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2 ml-4">
+                            <button
+                              onClick={() => handleEditEvent(event)}
+                              className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEvent(event.id)}
+                              className="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors font-medium"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">📅</div>
+                  <h3 className="text-lg font-medium text-gray-500 mb-2">
+                    No events found
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    {filterBy === "upcoming"
+                      ? "No upcoming events scheduled"
+                      : filterBy === "past"
+                        ? "No past events found"
+                        : "No events in your calendar"}
+                  </p>
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  >
+                    Add Your First Event
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

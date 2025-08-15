@@ -245,4 +245,52 @@ export const todoAPI = {
   },
 };
 
+// Event API functions
+export const eventAPI = {
+  // Get all events for current user
+  getEvents: async () => {
+    return await fetchAPI("/api/events");
+  },
+
+  // Create a new event
+  createEvent: async (eventData: {
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    category_id?: number;
+    duration?: string;
+  }) => {
+    return await fetchAPI("/api/events", {
+      method: "POST",
+      body: JSON.stringify(eventData),
+    });
+  },
+
+  // Update an existing event
+  updateEvent: async (
+    eventId: number,
+    eventData: Partial<{
+      title: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      category_id: number;
+      duration: string;
+    }>
+  ) => {
+    return await fetchAPI(`/api/events/${eventId}`, {
+      method: "PUT",
+      body: JSON.stringify(eventData),
+    });
+  },
+
+  // Delete an event
+  deleteEvent: async (eventId: number) => {
+    return await fetchAPI(`/api/events/${eventId}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 export default API_URL;

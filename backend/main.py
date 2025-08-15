@@ -138,6 +138,22 @@ class TodoUpdateSchema(BaseModel):
     category_id: Optional[int] = None
     completed: Optional[bool] = None
 
+class EventCreateSchema(BaseModel):
+    title: str
+    date: str
+    startTime: str
+    endTime: str
+    category_id: Optional[int] = None
+    duration: Optional[str] = None
+
+class EventUpdateSchema(BaseModel):
+    title: Optional[str] = None
+    date: Optional[str] = None
+    startTime: Optional[str] = None
+    endTime: Optional[str] = None
+    category_id: Optional[int] = None
+    duration: Optional[str] = None
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to AppointAI API", "version": "1.0.0"}
@@ -248,36 +264,117 @@ def get_events(
 
 @app.post("/api/events", response_model=EventSchema)
 def create_event(
-    event_data: dict,
+    event_data: EventCreateSchema,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Create a new event for the current user"""
-    event = Event(
-        user_id=current_user.id,
-        title=event_data["title"],
-        date=datetime.strptime(event_data["date"], "%Y-%m-%d").date(),
-        start_time=datetime.strptime(event_data["startTime"], "%H:%M").time(),
-        end_time=datetime.strptime(event_data["endTime"], "%H:%M").time(),
-        category_id=event_data.get("category_id"),
-        duration=event_data.get("duration"),
-        created_at=datetime.utcnow()
-    )
-    db.add(event)
-    db.commit()
-    db.refresh(event)
-    
-    return EventSchema(
-        id=event.id,
-        user_id=event.user_id,
-        category_id=event.category_id,
-        title=event.title,
-        date=event.date.isoformat(),
-        startTime=event.start_time.strftime("%H:%M"),
-        endTime=event.end_time.strftime("%H:%M"),
-        duration=event.duration,
-        createdAt=event.created_at.isoformat(),
-    )
+    try:
+        event = Event(
+            user_id=current_user.id,
+            title=event_data.title,
+            date=datetime.strptime(event_data.date, "%Y-%m-%d").date(),
+            start_time=datetime.strptime(event_data.startTime, "%H:%M").time(),
+            end_time=datetime.strptime(event_data.endTime, "%H:%M").time(),
+            category_id=event_data.category_id,
+            duration=event_data.duration,
+            created_at=datetime.utcnow()
+        )
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+        
+        return EventSchema(
+            id=event.id,
+            user_id=event.user_id,
+            category_id=event.category_id,
+            title=event.title,
+            date=event.date.isoformat(),
+            startTime=event.start_time.strftime("%H:%M"),
+            endTime=event.end_time.strftime("%H:%M"),
+            duration=event.duration,
+            createdAt=event.created_at.isoformat(),
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create event: {str(e)}")
+
+@app.put("/api/events/{event_id}", response_model=EventSchema)
+def update_event(
+    event_id: int,
+    event_data: EventUpdateSchema,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing event"""
+    try:
+        event = db.query(Event).filter(
+            Event.id == event_id, 
+            Event.user_id == current_user.id
+        ).first()
+        
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        # Update fields if provided
+        if event_data.title is not None:
+            event.title = event_data.title
+        if event_data.date is not None:
+            event.date = datetime.strptime(event_data.date, "%Y-%m-%d").date()
+        if event_data.startTime is not None:
+            event.start_time = datetime.strptime(event_data.startTime, "%H:%M").time()
+        if event_data.endTime is not None:
+            event.end_time = datetime.strptime(event_data.endTime, "%H:%M").time()
+        if event_data.category_id is not None:
+            event.category_id = event_data.category_id
+        if event_data.duration is not None:
+            event.duration = event_data.duration
+            
+        db.commit()
+        db.refresh(event)
+        
+        return EventSchema(
+            id=event.id,
+            user_id=event.user_id,
+            category_id=event.category_id,
+            title=event.title,
+            date=event.date.isoformat(),
+            startTime=event.start_time.strftime("%H:%M"),
+            endTime=event.end_time.strftime("%H:%M"),
+            duration=event.duration,
+            createdAt=event.created_at.isoformat() if event.created_at else None,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update event: {str(e)}")
+
+@app.delete("/api/events/{event_id}")
+def delete_event(
+    event_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an existing event"""
+    try:
+        event = db.query(Event).filter(
+            Event.id == event_id, 
+            Event.user_id == current_user.id
+        ).first()
+        
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        db.delete(event)
+        db.commit()
+        
+        return {"message": "Event deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete event: {str(e)}")
 
 # --- TODOS ---
 @app.get("/api/todos", response_model=List[TodoSchema])

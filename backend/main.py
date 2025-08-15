@@ -121,6 +121,23 @@ class CategoryUpdateSchema(BaseModel):
     color: Optional[str] = None
     description: Optional[str] = None
 
+class TodoCreateSchema(BaseModel):
+    title: str
+    description: Optional[str] = None
+    priority: Optional[str] = "medium"
+    estimated_duration: Optional[str] = None
+    due_date: Optional[str] = None
+    category_id: Optional[int] = None
+
+class TodoUpdateSchema(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    priority: Optional[str] = None
+    estimated_duration: Optional[str] = None
+    due_date: Optional[str] = None
+    category_id: Optional[int] = None
+    completed: Optional[bool] = None
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to AppointAI API", "version": "1.0.0"}
@@ -287,38 +304,136 @@ def get_todos(
 
 @app.post("/api/todos", response_model=TodoSchema)
 def create_todo(
-    todo_data: dict,
+    todo_data: TodoCreateSchema,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Create a new todo for the current user"""
-    todo = Todo(
-        user_id=current_user.id,
-        title=todo_data["title"],
-        description=todo_data.get("description"),
-        priority=todo_data.get("priority"),
-        estimated_duration=todo_data.get("estimated_duration"),
-        due_date=datetime.strptime(todo_data["due_date"], "%Y-%m-%d").date() if todo_data.get("due_date") else None,
-        category_id=todo_data.get("category_id"),
-        completed=False,
-        created_at=datetime.utcnow()
-    )
-    db.add(todo)
-    db.commit()
-    db.refresh(todo)
-    
-    return TodoSchema(
-        id=todo.id,
-        user_id=todo.user_id,
-        category_id=todo.category_id,
-        title=todo.title,
-        description=todo.description,
-        priority=todo.priority,
-        estimated_duration=todo.estimated_duration,
-        due_date=todo.due_date.isoformat() if todo.due_date else None,
-        completed=todo.completed,
-        created_at=todo.created_at.isoformat(),
-    )
+    try:
+        todo = Todo(
+            user_id=current_user.id,
+            title=todo_data.title,
+            description=todo_data.description,
+            priority=todo_data.priority,
+            estimated_duration=todo_data.estimated_duration,
+            due_date=datetime.strptime(todo_data.due_date, "%Y-%m-%d").date() if todo_data.due_date else None,
+            category_id=todo_data.category_id,
+            completed=False,
+            created_at=datetime.utcnow()
+        )
+        db.add(todo)
+        db.commit()
+        db.refresh(todo)
+        
+        return TodoSchema(
+            id=todo.id,
+            user_id=todo.user_id,
+            category_id=todo.category_id,
+            title=todo.title,
+            description=todo.description,
+            priority=todo.priority,
+            estimated_duration=todo.estimated_duration,
+            due_date=todo.due_date.isoformat() if todo.due_date else None,
+            completed=todo.completed,
+            created_at=todo.created_at.isoformat(),
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create todo: {str(e)}")
+
+@app.put("/api/todos/{todo_id}", response_model=TodoSchema)
+def update_todo(
+    todo_id: int,
+    todo_data: TodoUpdateSchema,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing todo"""
+    try:
+        todo = db.query(Todo).filter(
+            Todo.id == todo_id,
+            Todo.user_id == current_user.id
+        ).first()
+        
+        if not todo:
+            raise HTTPException(status_code=404, detail="Todo not found")
+        
+        # Convert Pydantic model to dict and filter out None values
+        update_data = todo_data.dict(exclude_unset=True)
+        
+        if not update_data:
+            return TodoSchema(
+                id=todo.id,
+                user_id=todo.user_id,
+                category_id=todo.category_id,
+                title=todo.title,
+                description=todo.description,
+                priority=todo.priority,
+                estimated_duration=todo.estimated_duration,
+                due_date=todo.due_date.isoformat() if todo.due_date else None,
+                completed=todo.completed,
+                created_at=todo.created_at.isoformat(),
+            )
+        
+        # Handle due_date conversion
+        if "due_date" in update_data and update_data["due_date"]:
+            update_data["due_date"] = datetime.strptime(update_data["due_date"], "%Y-%m-%d").date()
+        elif "due_date" in update_data and not update_data["due_date"]:
+            update_data["due_date"] = None
+        
+        # Update only the fields that were provided
+        for field, value in update_data.items():
+            if hasattr(todo, field):
+                setattr(todo, field, value)
+        
+        # Commit the changes
+        db.commit()
+        db.refresh(todo)
+        
+        return TodoSchema(
+            id=todo.id,
+            user_id=todo.user_id,
+            category_id=todo.category_id,
+            title=todo.title,
+            description=todo.description,
+            priority=todo.priority,
+            estimated_duration=todo.estimated_duration,
+            due_date=todo.due_date.isoformat() if todo.due_date else None,
+            completed=todo.completed,
+            created_at=todo.created_at.isoformat(),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update todo: {str(e)}")
+
+@app.delete("/api/todos/{todo_id}")
+def delete_todo(
+    todo_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an existing todo"""
+    try:
+        todo = db.query(Todo).filter(
+            Todo.id == todo_id,
+            Todo.user_id == current_user.id
+        ).first()
+        
+        if not todo:
+            raise HTTPException(status_code=404, detail="Todo not found")
+        
+        # Delete the todo
+        db.delete(todo)
+        db.commit()
+        
+        return {"message": "Todo deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete todo: {str(e)}")
 
 # --- CATEGORIES ---
 @app.get("/api/categories", response_model=List[CategorySchema])

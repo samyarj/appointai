@@ -196,4 +196,53 @@ export const categoryAPI = {
   },
 };
 
+// Todo API functions
+export const todoAPI = {
+  // Get all todos for current user
+  getTodos: async () => {
+    return await fetchAPI("/api/todos");
+  },
+
+  // Create a new todo
+  createTodo: async (todoData: {
+    title: string;
+    description?: string;
+    priority?: string;
+    estimated_duration?: string;
+    due_date?: string;
+    category_id?: number;
+  }) => {
+    return await fetchAPI("/api/todos", {
+      method: "POST",
+      body: JSON.stringify(todoData),
+    });
+  },
+
+  // Update an existing todo
+  updateTodo: async (
+    todoId: number,
+    todoData: Partial<{
+      title: string;
+      description: string;
+      priority: string;
+      estimated_duration: string;
+      due_date: string;
+      category_id: number;
+      completed: boolean;
+    }>
+  ) => {
+    return await fetchAPI(`/api/todos/${todoId}`, {
+      method: "PUT",
+      body: JSON.stringify(todoData),
+    });
+  },
+
+  // Delete a todo
+  deleteTodo: async (todoId: number) => {
+    return await fetchAPI(`/api/todos/${todoId}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 export default API_URL;

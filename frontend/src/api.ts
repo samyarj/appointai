@@ -17,13 +17,21 @@ export const removeAuthToken = (): void => {
 };
 
 // Get user info from localStorage
-export const getUserInfo = (): any => {
+export const getUserInfo = (): {
+  id: number;
+  name: string;
+  email: string;
+} | null => {
   const userStr = localStorage.getItem("userInfo");
   return userStr ? JSON.parse(userStr) : null;
 };
 
 // Set user info in localStorage
-export const setUserInfo = (userInfo: any): void => {
+export const setUserInfo = (userInfo: {
+  id: number;
+  name: string;
+  email: string;
+}): void => {
   localStorage.setItem("userInfo", JSON.stringify(userInfo));
 };
 
@@ -114,7 +122,26 @@ export const authAPI = {
   },
 
   // Update user profile
-  updateProfile: async (profileData: any) => {
+  updateProfile: async (
+    profileData: Partial<{
+      name: string;
+      email: string;
+      timezone: string;
+      date_format: string;
+      time_format: string;
+      theme: string;
+      notifications: {
+        email: boolean;
+        push: boolean;
+        reminders: boolean;
+        weeklyDigest: boolean;
+      };
+      privacy: {
+        profileVisibility: string;
+        showActivity: boolean;
+      };
+    }>
+  ) => {
     return await fetchAPI("/api/profile", {
       method: "PUT",
       body: JSON.stringify(profileData),

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { fetchAPI } from "./api";
+import React, { useState, useEffect, useCallback } from "react";
+import { fetchAPI, authAPI } from "./api";
 import { useAuth } from "./contexts/AuthContext";
 
 type UserProfile = {
@@ -12,19 +12,90 @@ type UserProfile = {
   date_format?: string;
   time_format?: string;
   theme?: string;
-  notifications?: any;
-  privacy?: any;
+  notifications?: {
+    email: boolean;
+    push: boolean;
+    reminders: boolean;
+    weeklyDigest: boolean;
+  };
+  privacy?: {
+    profileVisibility: string;
+    showActivity: boolean;
+  };
 };
 
 type TabType = "profile" | "preferences" | "notifications" | "privacy";
+
+// Custom hook for debounced profile updates
+const useDebouncedProfileUpdate = (delay: number = 300) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "success" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [timeoutId, setTimeoutId] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  const debouncedUpdate = useCallback(
+    async (profileData: Partial<UserProfile>) => {
+      // Clear existing timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Set new timeout
+      const newTimeoutId = setTimeout(async () => {
+        setIsSaving(true);
+        setSaveStatus("saving");
+        setErrorMessage(null);
+
+        try {
+          await authAPI.updateProfile(profileData);
+          setSaveStatus("success");
+          setTimeout(() => setSaveStatus("idle"), 2000); // Hide success message after 2 seconds
+        } catch (error) {
+          setSaveStatus("error");
+          setErrorMessage(
+            error instanceof Error ? error.message : "Failed to save changes"
+          );
+          setTimeout(() => setSaveStatus("idle"), 5000); // Hide error message after 5 seconds
+        } finally {
+          setIsSaving(false);
+        }
+      }, delay);
+
+      setTimeoutId(newTimeoutId);
+    },
+    [delay, timeoutId]
+  );
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [timeoutId]);
+
+  return {
+    debouncedUpdate,
+    isSaving,
+    saveStatus,
+    errorMessage,
+  };
+};
 
 const Profile: React.FC = () => {
   const { logout } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { debouncedUpdate, saveStatus, errorMessage } =
+    useDebouncedProfileUpdate();
 
   useEffect(() => {
     setLoading(true);
@@ -47,13 +118,14 @@ const Profile: React.FC = () => {
       .slice(0, 2);
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    console.log("Saving user data:", user);
-  };
-
   const handleInputChange = (field: string, value: string) => {
-    setUser(prev => ({ ...prev, [field]: value }));
+    if (!user) return;
+
+    const updatedUser = { ...user, [field]: value };
+    setUser(updatedUser);
+
+    // Trigger debounced update
+    debouncedUpdate({ [field]: value });
   };
 
   const handleNestedInputChange = (
@@ -61,13 +133,25 @@ const Profile: React.FC = () => {
     field: string,
     value: string | boolean
   ) => {
-    setUser(prev => ({
-      ...prev,
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
       [parent]: {
-        ...(prev[parent as keyof typeof prev] as Record<string, unknown>),
+        ...(user[parent as keyof typeof user] as Record<string, unknown>),
         [field]: value,
       },
-    }));
+    };
+    setUser(updatedUser);
+
+    // Trigger debounced update with nested data
+    const updateData = {
+      [parent]: {
+        ...(user[parent as keyof typeof user] as Record<string, unknown>),
+        [field]: value,
+      },
+    };
+    debouncedUpdate(updateData);
   };
 
   const renderProfileTab = () => (
@@ -93,14 +177,9 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="text"
-            value={user?.name}
+            value={user?.name || ""}
             onChange={e => handleInputChange("name", e.target.value)}
-            disabled={!isEditing}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
-              isEditing
-                ? "focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                : "bg-gray-50"
-            }`}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
@@ -110,14 +189,9 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="email"
-            value={user?.email}
+            value={user?.email || ""}
             onChange={e => handleInputChange("email", e.target.value)}
-            disabled={!isEditing}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
-              isEditing
-                ? "focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                : "bg-gray-50"
-            }`}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
@@ -126,14 +200,9 @@ const Profile: React.FC = () => {
             Timezone
           </label>
           <select
-            value={user?.timezone}
+            value={user?.timezone || ""}
             onChange={e => handleInputChange("timezone", e.target.value)}
-            disabled={!isEditing}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
-              isEditing
-                ? "focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                : "bg-gray-50"
-            }`}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="America/New_York">Eastern Time (ET)</option>
             <option value="America/Chicago">Central Time (CT)</option>
@@ -150,7 +219,7 @@ const Profile: React.FC = () => {
           </label>
           <input
             type="text"
-            value={user?.join_date}
+            value={user?.join_date || ""}
             disabled
             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
           />
@@ -167,8 +236,8 @@ const Profile: React.FC = () => {
             Date Format
           </label>
           <select
-            value={user?.date_format}
-            onChange={e => handleInputChange("dateFormat", e.target.value)}
+            value={user?.date_format || ""}
+            onChange={e => handleInputChange("date_format", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2025)</option>
@@ -182,8 +251,8 @@ const Profile: React.FC = () => {
             Time Format
           </label>
           <select
-            value={user?.time_format}
-            onChange={e => handleInputChange("timeFormat", e.target.value)}
+            value={user?.time_format || ""}
+            onChange={e => handleInputChange("time_format", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="12h">12-hour (2:30 PM)</option>
@@ -196,7 +265,7 @@ const Profile: React.FC = () => {
             Theme
           </label>
           <select
-            value={user?.theme}
+            value={user?.theme || ""}
             onChange={e => handleInputChange("theme", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -402,39 +471,57 @@ const Profile: React.FC = () => {
               <p className="text-gray-600">
                 Manage your account settings and preferences.
               </p>
+              {/* Save Status Display */}
+              {saveStatus !== "idle" && (
+                <div className="mt-2">
+                  {saveStatus === "saving" && (
+                    <div className="flex items-center text-blue-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      Saving changes...
+                    </div>
+                  )}
+                  {saveStatus === "success" && (
+                    <div className="flex items-center text-green-600">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Changes saved successfully!
+                    </div>
+                  )}
+                  {saveStatus === "error" && (
+                    <div className="flex items-center text-red-600">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {errorMessage || "Failed to save changes"}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Save Changes
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    onClick={logout}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
+              <button
+                onClick={logout}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
 

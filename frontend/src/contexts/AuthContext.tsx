@@ -11,6 +11,7 @@ import {
   setUserInfo,
   removeUserInfo,
   removeAuthToken,
+  setAuthToken,
 } from "../api";
 
 interface User {
@@ -86,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
       setUser(userData);
       setUserInfo(userData);
+      setAuthToken(response.access_token);
       return response;
     } catch (error) {
       throw error;

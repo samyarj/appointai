@@ -154,4 +154,46 @@ export const isAuthenticated = (): boolean => {
   return !!getAuthToken();
 };
 
+// Category API functions
+export const categoryAPI = {
+  // Get all categories
+  getCategories: async () => {
+    return await fetchAPI("/api/categories");
+  },
+
+  // Create a new category
+  createCategory: async (categoryData: {
+    name: string;
+    color?: string;
+    description?: string;
+  }) => {
+    return await fetchAPI("/api/categories", {
+      method: "POST",
+      body: JSON.stringify(categoryData),
+    });
+  },
+
+  // Update an existing category
+  updateCategory: async (
+    categoryId: number,
+    categoryData: Partial<{
+      name: string;
+      color: string;
+      description: string;
+    }>
+  ) => {
+    return await fetchAPI(`/api/categories/${categoryId}`, {
+      method: "PUT",
+      body: JSON.stringify(categoryData),
+    });
+  },
+
+  // Delete a category
+  deleteCategory: async (categoryId: number) => {
+    return await fetchAPI(`/api/categories/${categoryId}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 export default API_URL;

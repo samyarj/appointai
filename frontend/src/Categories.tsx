@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchAPI } from "./api";
+import { categoryAPI } from "./api";
 
 interface Category {
   id: number;
@@ -22,37 +22,70 @@ const Categories: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState<{
+    type: "idle" | "loading" | "success" | "error";
+    message: string;
+  }>({ type: "idle", message: "" });
 
+  // Load categories on component mount
   useEffect(() => {
-    setLoading(true);
-    fetchAPI("/api/categories")
-      .then(data => {
-        setCategories(data);
-        setError(null);
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    loadCategories();
   }, []);
 
-  const handleAddCategory = () => {
-    if (!newCategory.name?.trim()) return;
+  const loadCategories = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await categoryAPI.getCategories();
+      setCategories(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const category: Category = {
-      id: Math.max(...categories.map(c => c.id), 0) + 1,
-      name: newCategory.name.trim(),
-      color: newCategory.color || "#3B82F6",
-      description: newCategory.description || "",
-      created_at: new Date().toISOString(),
-      usage_count: 0,
-    };
+  const showStatus = (type: "success" | "error", message: string) => {
+    setActionStatus({ type, message });
+    setTimeout(
+      () => {
+        setActionStatus({ type: "idle", message: "" });
+      },
+      type === "success" ? 3000 : 5000
+    );
+  };
 
-    setCategories([...categories, category]);
-    setNewCategory({
-      name: "",
-      color: "#3B82F6",
-      description: "",
-    });
-    setShowAddForm(false);
+  const handleAddCategory = async () => {
+    if (!newCategory.name?.trim()) {
+      showStatus("error", "Category name cannot be empty.");
+      return;
+    }
+
+    setActionStatus({ type: "loading", message: "Creating category..." });
+
+    try {
+      const categoryData = {
+        name: newCategory.name.trim(),
+        color: newCategory.color || "#3B82F6",
+        description: newCategory.description || "",
+      };
+
+      const createdCategory = await categoryAPI.createCategory(categoryData);
+
+      setCategories([...categories, createdCategory]);
+      setNewCategory({
+        name: "",
+        color: "#3B82F6",
+        description: "",
+      });
+      setShowAddForm(false);
+
+      showStatus("success", "Category created successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to create category";
+      showStatus("error", errorMessage);
+    }
   };
 
   const handleEditCategory = (category: Category) => {
@@ -65,38 +98,67 @@ const Categories: React.FC = () => {
     setShowAddForm(true);
   };
 
-  const handleUpdateCategory = () => {
-    if (!editingCategory || !newCategory.name?.trim()) return;
+  const handleUpdateCategory = async () => {
+    if (!editingCategory || !newCategory.name?.trim()) {
+      showStatus("error", "Category name cannot be empty.");
+      return;
+    }
 
-    setCategories(
-      categories.map(cat =>
-        cat.id === editingCategory.id
-          ? {
-              ...cat,
-              name: newCategory.name!.trim(),
-              color: newCategory.color || "#3B82F6",
-              description: newCategory.description || "",
-            }
-          : cat
-      )
-    );
+    setActionStatus({ type: "loading", message: "Updating category..." });
 
-    setEditingCategory(null);
-    setNewCategory({
-      name: "",
-      color: "#3B82F6",
-      description: "",
-    });
-    setShowAddForm(false);
+    try {
+      const categoryData = {
+        name: newCategory.name.trim(),
+        color: newCategory.color || "#3B82F6",
+        description: newCategory.description || "",
+      };
+
+      const updatedCategory = await categoryAPI.updateCategory(
+        editingCategory.id,
+        categoryData
+      );
+
+      setCategories(
+        categories.map(cat =>
+          cat.id === editingCategory.id ? updatedCategory : cat
+        )
+      );
+
+      setEditingCategory(null);
+      setNewCategory({
+        name: "",
+        color: "#3B82F6",
+        description: "",
+      });
+      setShowAddForm(false);
+
+      showStatus("success", "Category updated successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to update category";
+      showStatus("error", errorMessage);
+    }
   };
 
-  const handleDeleteCategory = (id: number) => {
+  const handleDeleteCategory = async (id: number) => {
     if (
-      window.confirm(
+      !window.confirm(
         "Are you sure you want to delete this category? This action cannot be undone."
       )
     ) {
+      return;
+    }
+
+    setActionStatus({ type: "loading", message: "Deleting category..." });
+
+    try {
+      await categoryAPI.deleteCategory(id);
       setCategories(categories.filter(cat => cat.id !== id));
+      showStatus("success", "Category deleted successfully!");
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to delete category";
+      showStatus("error", errorMessage);
     }
   };
 
@@ -164,6 +226,50 @@ const Categories: React.FC = () => {
               Add Category
             </button>
           </div>
+
+          {/* Status Display */}
+          {actionStatus.type !== "idle" && (
+            <div className="mb-4">
+              {actionStatus.type === "loading" && (
+                <div className="flex items-center text-blue-600 bg-blue-50 p-3 rounded-lg">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  {actionStatus.message}
+                </div>
+              )}
+              {actionStatus.type === "success" && (
+                <div className="flex items-center text-green-600 bg-green-50 p-3 rounded-lg">
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {actionStatus.message}
+                </div>
+              )}
+              {actionStatus.type === "error" && (
+                <div className="flex items-center text-red-600 bg-red-50 p-3 rounded-lg">
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {actionStatus.message}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -384,10 +490,22 @@ const Categories: React.FC = () => {
               {editingCategory ? "Edit Category" : "Add New Category"}
             </h2>
 
+            {actionStatus.message && (
+              <div
+                className={`p-3 rounded-lg mb-4 ${
+                  actionStatus.type === "success"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {actionStatus.message}
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category Name
+                  Category Name *
                 </label>
                 <input
                   type="text"
@@ -397,7 +515,13 @@ const Categories: React.FC = () => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter category name"
+                  disabled={actionStatus.type === "loading"}
                 />
+                {!newCategory.name?.trim() && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Category name is required
+                  </p>
+                )}
               </div>
 
               <div>
@@ -414,7 +538,8 @@ const Categories: React.FC = () => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
-                  placeholder="Enter description"
+                  placeholder="Enter description (optional)"
+                  disabled={actionStatus.type === "loading"}
                 />
               </div>
 
@@ -437,6 +562,7 @@ const Categories: React.FC = () => {
                   ].map(color => (
                     <button
                       key={color}
+                      type="button"
                       onClick={() => setNewCategory({ ...newCategory, color })}
                       className={`w-10 h-10 rounded-full border-2 transition-all ${
                         newCategory.color === color
@@ -444,6 +570,7 @@ const Categories: React.FC = () => {
                           : "border-gray-300 hover:border-gray-400"
                       }`}
                       style={{ backgroundColor: color }}
+                      disabled={actionStatus.type === "loading"}
                     />
                   ))}
                 </div>
@@ -452,6 +579,7 @@ const Categories: React.FC = () => {
 
             <div className="flex gap-3 mt-6">
               <button
+                type="button"
                 onClick={() => {
                   setShowAddForm(false);
                   setEditingCategory(null);
@@ -461,7 +589,8 @@ const Categories: React.FC = () => {
                     description: "",
                   });
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                disabled={actionStatus.type === "loading"}
               >
                 Cancel
               </button>
@@ -469,9 +598,19 @@ const Categories: React.FC = () => {
                 onClick={
                   editingCategory ? handleUpdateCategory : handleAddCategory
                 }
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center"
+                disabled={
+                  actionStatus.type === "loading" || !newCategory.name?.trim()
+                }
               >
-                {editingCategory ? "Update" : "Add"} Category
+                {actionStatus.type === "loading" ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {editingCategory ? "Updating..." : "Creating..."}
+                  </>
+                ) : (
+                  `${editingCategory ? "Update" : "Add"} Category`
+                )}
               </button>
             </div>
           </div>

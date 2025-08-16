@@ -72,11 +72,24 @@ const Calendar: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showTodoForm, setShowTodoForm] = useState(false);
+  const [showTodoSelector, setShowTodoSelector] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
 
   // Load data on component mount
   useEffect(() => {
@@ -100,6 +113,26 @@ const Calendar: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to show confirmation dialog
+  const showConfirmDialog = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   // Helper function to get events for a date
@@ -292,7 +325,6 @@ const Calendar: React.FC = () => {
       month !== undefined ? month : current.month,
       day
     );
-    setSelectedDate(selectedDate);
     setCurrent({
       year: selectedDate.getFullYear(),
       month: selectedDate.getMonth(),
@@ -365,14 +397,21 @@ const Calendar: React.FC = () => {
 
   // CRUD handlers for events
   const handleDeleteEvent = async (eventId: number) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+    const event = events.find(e => e.id === eventId);
+    const eventName = event ? event.title : "this event";
 
-    try {
-      await eventAPI.deleteEvent(eventId);
-      setEvents(events.filter(e => e.id !== eventId));
-    } catch (err: any) {
-      setError(err.message);
-    }
+    showConfirmDialog(
+      "Delete Event",
+      `Are you sure you want to delete "${eventName}"? This action cannot be undone.`,
+      async () => {
+        try {
+          await eventAPI.deleteEvent(eventId);
+          setEvents(events.filter(e => e.id !== eventId));
+        } catch (err: any) {
+          setError(err.message);
+        }
+      }
+    );
   };
 
   const handleSaveEvent = async (eventData: Omit<Event, "id">) => {
@@ -398,14 +437,21 @@ const Calendar: React.FC = () => {
 
   // CRUD handlers for todos
   const handleDeleteTodo = async (todoId: number) => {
-    if (!confirm("Are you sure you want to delete this todo?")) return;
+    const todo = todos.find(t => t.id === todoId);
+    const todoName = todo ? todo.title : "this todo";
 
-    try {
-      await todoAPI.deleteTodo(todoId);
-      setTodos(todos.filter(t => t.id !== todoId));
-    } catch (err: any) {
-      setError(err.message);
-    }
+    showConfirmDialog(
+      "Delete Todo",
+      `Are you sure you want to delete "${todoName}"? This action cannot be undone.`,
+      async () => {
+        try {
+          await todoAPI.deleteTodo(todoId);
+          setTodos(todos.filter(t => t.id !== todoId));
+        } catch (err: any) {
+          setError(err.message);
+        }
+      }
+    );
   };
 
   const handleToggleTodo = async (todoId: number, completed: boolean) => {
@@ -433,9 +479,192 @@ const Calendar: React.FC = () => {
     }
   };
 
+  // Handle rescheduling existing todo to selected date
+  const handleRescheduleTodo = async (todoId: number) => {
+    try {
+      const selectedDateStr = formatDateForAPI(
+        new Date(current.year, current.month, current.day)
+      );
+      const updatedTodo = await todoAPI.updateTodo(todoId, {
+        due_date: selectedDateStr,
+      });
+      setTodos(todos.map(t => (t.id === todoId ? updatedTodo : t)));
+      setShowTodoSelector(false);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   // Format date for API (consistent with other pages)
   const formatDateForAPI = (date: Date): string => {
     return date.toISOString().split("T")[0];
+  };
+
+  // Todo Selector Component for searching and rescheduling todos
+  const TodoSelector = ({ currentDate }: { currentDate: Date }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredTodos, setFilteredTodos] = useState<TodoItem[]>([]);
+
+    // Filter todos based on search term
+    useEffect(() => {
+      if (searchTerm.trim() === "") {
+        setFilteredTodos(todos);
+      } else {
+        const filtered = todos.filter(
+          todo =>
+            todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (todo.description &&
+              todo.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setFilteredTodos(filtered);
+      }
+    }, [searchTerm]);
+
+    const selectedDateStr = formatDateForAPI(currentDate);
+
+    return (
+      <div className="space-y-3">
+        {/* Search Input */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search todos to reschedule..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+          <svg
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+
+        {/* Todo List */}
+        <div className="max-h-64 overflow-y-auto">
+          {filteredTodos.length > 0 ? (
+            <div className="space-y-2">
+              {filteredTodos.map(todo => {
+                const isAlreadyScheduled = todo.due_date === selectedDateStr;
+                return (
+                  <div
+                    key={todo.id}
+                    className={`border rounded-lg p-3 transition-all duration-200 ${
+                      isAlreadyScheduled
+                        ? "border-green-300 bg-green-50"
+                        : todo.completed
+                          ? "border-gray-200 bg-gray-50"
+                          : "border-gray-300 bg-white hover:bg-gray-50 cursor-pointer"
+                    }`}
+                    onClick={() =>
+                      !isAlreadyScheduled &&
+                      !todo.completed &&
+                      handleRescheduleTodo(todo.id)
+                    }
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={todo.completed}
+                          readOnly
+                          className="mt-1 w-3 h-3 text-green-600 bg-gray-100 border-gray-300 rounded"
+                        />
+                        <div className="flex-1">
+                          <h5
+                            className={`font-medium text-sm ${
+                              todo.completed
+                                ? "text-gray-500 line-through"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {todo.title}
+                          </h5>
+                          {todo.description && (
+                            <p
+                              className={`text-xs mt-1 ${
+                                todo.completed
+                                  ? "text-gray-400"
+                                  : "text-gray-600"
+                              }`}
+                            >
+                              {todo.description.length > 50
+                                ? todo.description.substring(0, 50) + "..."
+                                : todo.description}
+                            </p>
+                          )}
+                          <div className="flex items-center space-x-2 mt-1">
+                            {todo.priority && (
+                              <span
+                                className={`inline-block px-1 py-0.5 text-xs rounded ${
+                                  todo.priority === "high"
+                                    ? "bg-red-100 text-red-700"
+                                    : todo.priority === "medium"
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-green-100 text-green-700"
+                                }`}
+                              >
+                                {todo.priority}
+                              </span>
+                            )}
+                            {todo.due_date && (
+                              <span className="text-xs text-gray-500">
+                                Due:{" "}
+                                {new Date(
+                                  todo.due_date + "T00:00:00"
+                                ).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-2">
+                        {isAlreadyScheduled ? (
+                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                            Scheduled
+                          </span>
+                        ) : todo.completed ? (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                            Done
+                          </span>
+                        ) : (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleRescheduleTodo(todo.id);
+                            }}
+                            className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                          >
+                            Reschedule
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <div className="text-gray-400 text-2xl mb-1">🔍</div>
+              <p className="text-gray-500 text-sm">
+                {searchTerm
+                  ? "No todos found matching your search"
+                  : "No todos available"}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   // Renderers for each view
@@ -708,57 +937,42 @@ const Calendar: React.FC = () => {
               day: "numeric",
             })}
           </h2>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setShowEventForm(!showEventForm)}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                showEventForm
-                  ? "bg-gray-500 text-white hover:bg-gray-600"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              {showEventForm ? "Cancel" : "Add Event"}
-            </button>
-            <button
-              onClick={() => setShowTodoForm(!showTodoForm)}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                showTodoForm
-                  ? "bg-gray-500 text-white hover:bg-gray-600"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-            >
-              {showTodoForm ? "Cancel" : "Add Todo"}
-            </button>
-          </div>
         </div>
-
-        {/* Inline Event Form */}
-        {showEventForm && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {editingEvent ? "Edit Event" : "Add New Event"}
-            </h3>
-            <EventForm currentDate={currentDate} />
-          </div>
-        )}
-
-        {/* Inline Todo Form */}
-        {showTodoForm && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {editingTodo ? "Edit Todo" : "Add New Todo"}
-            </h3>
-            <TodoForm currentDate={currentDate} />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Events Section */}
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
-              Events ({dayEvents.length})
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+                <span className="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
+                Events ({dayEvents.length})
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEventForm(!showEventForm);
+                  setShowTodoForm(false);
+                  setShowTodoSelector(false);
+                }}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  showEventForm
+                    ? "bg-gray-500 text-white hover:bg-gray-600"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
+              >
+                {showEventForm ? "Cancel" : "Add Event"}
+              </button>
+            </div>
+
+            {/* Inline Event Form */}
+            {showEventForm && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                  {editingEvent ? "Edit Event" : "Add New Event"}
+                </h4>
+                <EventForm currentDate={currentDate} />
+              </div>
+            )}
+
             {dayEvents.length > 0 ? (
               <div className="space-y-3">
                 {dayEvents.map(event => (
@@ -786,6 +1000,7 @@ const Calendar: React.FC = () => {
                             setEditingEvent(event);
                             setShowEventForm(true);
                             setShowTodoForm(false);
+                            setShowTodoSelector(false);
                           }}
                           className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
                         >
@@ -812,10 +1027,63 @@ const Calendar: React.FC = () => {
 
           {/* Todos Section */}
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <span className="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
-              Todos ({dayTodos.length})
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+                <span className="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
+                Todos ({dayTodos.length})
+              </h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    setShowTodoSelector(!showTodoSelector);
+                    setShowTodoForm(false);
+                    setShowEventForm(false);
+                  }}
+                  className={`px-3 py-2 rounded-lg transition-colors text-sm ${
+                    showTodoSelector
+                      ? "bg-gray-500 text-white hover:bg-gray-600"
+                      : "bg-yellow-500 text-white hover:bg-yellow-600"
+                  }`}
+                >
+                  {showTodoSelector ? "Cancel" : "Reschedule"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowTodoForm(!showTodoForm);
+                    setShowTodoSelector(false);
+                    setShowEventForm(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    showTodoForm
+                      ? "bg-gray-500 text-white hover:bg-gray-600"
+                      : "bg-green-500 text-white hover:bg-green-600"
+                  }`}
+                >
+                  {showTodoForm ? "Cancel" : "Add Todo"}
+                </button>
+              </div>
+            </div>
+
+            {/* Todo Search/Reschedule */}
+            {showTodoSelector && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                  Reschedule Existing Todo
+                </h4>
+                <TodoSelector currentDate={currentDate} />
+              </div>
+            )}
+
+            {/* Inline Todo Form */}
+            {showTodoForm && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                  {editingTodo ? "Edit Todo" : "Add New Todo"}
+                </h4>
+                <TodoForm currentDate={currentDate} />
+              </div>
+            )}
+
             {dayTodos.length > 0 ? (
               <div className="space-y-3">
                 {dayTodos.map(todo => (
@@ -879,6 +1147,7 @@ const Calendar: React.FC = () => {
                             setEditingTodo(todo);
                             setShowTodoForm(true);
                             setShowEventForm(false);
+                            setShowTodoSelector(false);
                           }}
                           className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
                         >
@@ -1377,6 +1646,34 @@ const Calendar: React.FC = () => {
           {view === "day" && renderDay()}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              {confirmDialog.title}
+            </h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={confirmDialog.onCancel}
+                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

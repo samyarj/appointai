@@ -46,6 +46,19 @@ const Todo: React.FC = () => {
     type: "idle" | "loading" | "success" | "error";
     message: string;
   }>({ type: "idle", message: "" });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
 
   // Load todos and categories on component mount
   useEffect(() => {
@@ -83,6 +96,26 @@ const Todo: React.FC = () => {
       },
       type === "success" ? 3000 : 5000
     );
+  };
+
+  // Helper function to show confirmation dialog
+  const showConfirmDialog = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const handleAddTodo = async () => {
@@ -194,25 +227,26 @@ const Todo: React.FC = () => {
   };
 
   const handleDeleteTodo = async (id: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this todo? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+    const todo = todos.find(t => t.id === id);
+    const todoName = todo ? todo.title : "this todo";
 
-    setActionStatus({ type: "loading", message: "Deleting todo..." });
+    showConfirmDialog(
+      "Delete Todo",
+      `Are you sure you want to delete "${todoName}"? This action cannot be undone.`,
+      async () => {
+        setActionStatus({ type: "loading", message: "Deleting todo..." });
 
-    try {
-      await todoAPI.deleteTodo(id);
-      setTodos(todos.filter(todo => todo.id !== id));
-      showStatus("success", "Todo deleted successfully!");
-    } catch (e) {
-      const errorMessage =
-        e instanceof Error ? e.message : "Failed to delete todo";
-      showStatus("error", errorMessage);
-    }
+        try {
+          await todoAPI.deleteTodo(id);
+          setTodos(todos.filter(todo => todo.id !== id));
+          showStatus("success", "Todo deleted successfully!");
+        } catch (e) {
+          const errorMessage =
+            e instanceof Error ? e.message : "Failed to delete todo";
+          showStatus("error", errorMessage);
+        }
+      }
+    );
   };
 
   const priorityColors = {
@@ -877,6 +911,35 @@ const Todo: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {/* Confirmation Dialog */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              {confirmDialog.title}
+            </h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={confirmDialog.onCancel}
+                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

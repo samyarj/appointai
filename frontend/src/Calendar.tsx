@@ -77,7 +77,6 @@ const Calendar: React.FC = () => {
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showTodoForm, setShowTodoForm] = useState(false);
-  const [showTodoSelector, setShowTodoSelector] = useState(false);
 
   // Load data on component mount
   useEffect(() => {
@@ -434,30 +433,9 @@ const Calendar: React.FC = () => {
     }
   };
 
-  // Handle rescheduling existing todo to selected date
-  const handleRescheduleTodo = async (todoId: number) => {
-    try {
-      const selectedDateStr = formatDateForAPI(
-        new Date(current.year, current.month, current.day)
-      );
-      const updatedTodo = await todoAPI.updateTodo(todoId, {
-        due_date: selectedDateStr,
-      });
-      setTodos(todos.map(t => (t.id === todoId ? updatedTodo : t)));
-      setShowTodoSelector(false);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
   // Format date for API (consistent with other pages)
   const formatDateForAPI = (date: Date): string => {
     return date.toISOString().split("T")[0];
-  };
-
-  // Parse date from string (consistent with other pages)
-  const parseDate = (dateStr: string): Date => {
-    return new Date(dateStr + "T00:00:00");
   };
 
   // Renderers for each view
@@ -732,25 +710,47 @@ const Calendar: React.FC = () => {
           </h2>
           <div className="flex space-x-2">
             <button
-              onClick={() => setShowEventForm(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              onClick={() => setShowEventForm(!showEventForm)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                showEventForm
+                  ? "bg-gray-500 text-white hover:bg-gray-600"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
             >
-              Add Event
+              {showEventForm ? "Cancel" : "Add Event"}
             </button>
             <button
-              onClick={() => setShowTodoSelector(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              onClick={() => setShowTodoForm(!showTodoForm)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                showTodoForm
+                  ? "bg-gray-500 text-white hover:bg-gray-600"
+                  : "bg-green-500 text-white hover:bg-green-600"
+              }`}
             >
-              Add Todo
-            </button>
-            <button
-              onClick={() => setShowTodoForm(true)}
-              className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-            >
-              New Todo
+              {showTodoForm ? "Cancel" : "Add Todo"}
             </button>
           </div>
         </div>
+
+        {/* Inline Event Form */}
+        {showEventForm && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              {editingEvent ? "Edit Event" : "Add New Event"}
+            </h3>
+            <EventForm currentDate={currentDate} />
+          </div>
+        )}
+
+        {/* Inline Todo Form */}
+        {showTodoForm && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              {editingTodo ? "Edit Todo" : "Add New Todo"}
+            </h3>
+            <TodoForm currentDate={currentDate} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Events Section */}
@@ -782,7 +782,11 @@ const Calendar: React.FC = () => {
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setEditingEvent(event)}
+                          onClick={() => {
+                            setEditingEvent(event);
+                            setShowEventForm(true);
+                            setShowTodoForm(false);
+                          }}
                           className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
                         >
                           Edit
@@ -871,7 +875,11 @@ const Calendar: React.FC = () => {
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setEditingTodo(todo)}
+                          onClick={() => {
+                            setEditingTodo(todo);
+                            setShowTodoForm(true);
+                            setShowEventForm(false);
+                          }}
                           className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
                         >
                           Edit
@@ -899,13 +907,11 @@ const Calendar: React.FC = () => {
     );
   }
 
-  // Event Form Modal Component
-  const EventFormModal = () => {
+  // Inline Event Form Component
+  const EventForm = ({ currentDate }: { currentDate: Date }) => {
     const [formData, setFormData] = useState({
       title: editingEvent?.title || "",
-      date:
-        editingEvent?.date ||
-        formatDateForAPI(new Date(current.year, current.month, current.day)),
+      date: editingEvent?.date || formatDateForAPI(currentDate),
       startTime: editingEvent?.startTime || "",
       endTime: editingEvent?.endTime || "",
       category_id: editingEvent?.category_id || "",
@@ -921,126 +927,123 @@ const Calendar: React.FC = () => {
       });
     };
 
-    const handleClose = () => {
+    const handleCancel = () => {
       setShowEventForm(false);
       setEditingEvent(null);
+      setFormData({
+        title: "",
+        date: formatDateForAPI(currentDate),
+        startTime: "",
+        endTime: "",
+        category_id: "",
+      });
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingEvent ? "Edit Event" : "Create Event"}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={e =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.date}
-                onChange={e =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={formData.startTime}
-                  onChange={e =>
-                    setFormData({ ...formData, startTime: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={formData.endTime}
-                  onChange={e =>
-                    setFormData({ ...formData, endTime: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={formData.category_id}
-                onChange={e =>
-                  setFormData({ ...formData, category_id: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                {editingEvent ? "Update" : "Create"}
-              </button>
-            </div>
-          </form>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Event Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={e =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              placeholder="Enter event title"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date *
+            </label>
+            <input
+              type="date"
+              required
+              value={formData.date}
+              onChange={e => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={formData.category_id}
+              onChange={e =>
+                setFormData({ ...formData, category_id: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select a category</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Time *
+            </label>
+            <input
+              type="time"
+              required
+              value={formData.startTime}
+              onChange={e =>
+                setFormData({ ...formData, startTime: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              End Time *
+            </label>
+            <input
+              type="time"
+              required
+              value={formData.endTime}
+              onChange={e =>
+                setFormData({ ...formData, endTime: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
-      </div>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            {editingEvent ? "Update Event" : "Add Event"}
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     );
   };
 
-  // Todo Form Modal Component
-  const TodoFormModal = () => {
+  // Inline Todo Form Component
+  const TodoForm = ({ currentDate }: { currentDate: Date }) => {
     const [formData, setFormData] = useState({
       title: editingTodo?.title || "",
       description: editingTodo?.description || "",
       priority: editingTodo?.priority || "",
       estimated_duration: editingTodo?.estimated_duration || "",
-      due_date:
-        editingTodo?.due_date ||
-        formatDateForAPI(new Date(current.year, current.month, current.day)),
+      due_date: editingTodo?.due_date || formatDateForAPI(currentDate),
       category_id: editingTodo?.category_id || "",
       completed: editingTodo?.completed || false,
     });
@@ -1056,381 +1059,153 @@ const Calendar: React.FC = () => {
       });
     };
 
-    const handleClose = () => {
+    const handleCancel = () => {
       setShowTodoForm(false);
       setEditingTodo(null);
+      setFormData({
+        title: "",
+        description: "",
+        priority: "",
+        estimated_duration: "",
+        due_date: formatDateForAPI(currentDate),
+        category_id: "",
+        completed: false,
+      });
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingTodo ? "Edit Todo" : "Create Todo"}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={e =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={e =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.due_date}
-                onChange={e =>
-                  setFormData({ ...formData, due_date: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Priority
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={e =>
-                    setFormData({ ...formData, priority: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">Select priority</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Est. Duration
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., 2 hours"
-                  value={formData.estimated_duration}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      estimated_duration: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={formData.category_id}
-                onChange={e =>
-                  setFormData({ ...formData, category_id: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {editingTodo && (
-              <div className="flex items-center">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={e =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              placeholder="Enter todo title"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Priority
+            </label>
+            <select
+              value={formData.priority}
+              onChange={e =>
+                setFormData({ ...formData, priority: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Select priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              placeholder="Enter description (optional)"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Due Date *
+            </label>
+            <input
+              type="date"
+              required
+              value={formData.due_date}
+              onChange={e =>
+                setFormData({ ...formData, due_date: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={formData.category_id}
+              onChange={e =>
+                setFormData({ ...formData, category_id: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Select a category</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Est. Duration
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., 2 hours"
+              value={formData.estimated_duration}
+              onChange={e =>
+                setFormData({
+                  ...formData,
+                  estimated_duration: e.target.value,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          {editingTodo && (
+            <div className="md:col-span-2">
+              <label className="flex items-center">
                 <input
                   type="checkbox"
-                  id="completed"
                   checked={formData.completed}
                   onChange={e =>
                     setFormData({ ...formData, completed: e.target.checked })
                   }
                   className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
                 />
-                <label
-                  htmlFor="completed"
-                  className="ml-2 text-sm text-gray-700"
-                >
+                <span className="ml-2 text-sm text-gray-700">
                   Mark as completed
-                </label>
-              </div>
-            )}
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-              >
-                {editingTodo ? "Update" : "Create"}
-              </button>
+                </span>
+              </label>
             </div>
-          </form>
+          )}
         </div>
-      </div>
-    );
-  };
-
-  // Todo Selector Modal Component
-  const TodoSelector = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filteredTodos, setFilteredTodos] = useState<TodoItem[]>([]);
-
-    // Filter todos based on search term
-    useEffect(() => {
-      if (searchTerm.trim() === "") {
-        setFilteredTodos(todos);
-      } else {
-        const filtered = todos.filter(
-          todo =>
-            todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (todo.description &&
-              todo.description.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-        setFilteredTodos(filtered);
-      }
-    }, [searchTerm, todos]);
-
-    const handleClose = () => {
-      setShowTodoSelector(false);
-      setSearchTerm("");
-    };
-
-    const selectedDateStr = formatDateForAPI(
-      new Date(current.year, current.month, current.day)
-    );
-    const currentSelectedDate = new Date(
-      current.year,
-      current.month,
-      current.day
-    );
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">
-              Reschedule Todo to{" "}
-              {currentSelectedDate.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </h2>
-            <button
-              onClick={handleClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search todos..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Todo List */}
-          <div className="overflow-y-auto max-h-96 p-6">
-            {filteredTodos.length > 0 ? (
-              <div className="space-y-3">
-                {filteredTodos.map(todo => {
-                  const isAlreadyScheduled = todo.due_date === selectedDateStr;
-                  return (
-                    <div
-                      key={todo.id}
-                      className={`border rounded-lg p-4 transition-all duration-200 ${
-                        isAlreadyScheduled
-                          ? "border-green-300 bg-green-50"
-                          : todo.completed
-                            ? "border-gray-200 bg-gray-50"
-                            : "border-gray-300 bg-white hover:bg-gray-50 cursor-pointer"
-                      }`}
-                      onClick={() =>
-                        !isAlreadyScheduled &&
-                        !todo.completed &&
-                        handleRescheduleTodo(todo.id)
-                      }
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3">
-                          <input
-                            type="checkbox"
-                            checked={todo.completed}
-                            readOnly
-                            className="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded"
-                          />
-                          <div className="flex-1">
-                            <h4
-                              className={`font-semibold text-lg ${
-                                todo.completed
-                                  ? "text-gray-500 line-through"
-                                  : "text-gray-800"
-                              }`}
-                            >
-                              {todo.title}
-                            </h4>
-                            {todo.description && (
-                              <p
-                                className={`text-sm mt-1 ${
-                                  todo.completed
-                                    ? "text-gray-400"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                {todo.description}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-3 mt-2">
-                              {todo.priority && (
-                                <span
-                                  className={`inline-block px-2 py-1 text-xs rounded-full ${
-                                    todo.priority === "high"
-                                      ? "bg-red-100 text-red-800"
-                                      : todo.priority === "medium"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-green-100 text-green-800"
-                                  }`}
-                                >
-                                  {todo.priority} priority
-                                </span>
-                              )}
-                              {todo.due_date && (
-                                <span className="text-xs text-gray-500">
-                                  Due:{" "}
-                                  {new Date(
-                                    todo.due_date + "T00:00:00"
-                                  ).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          {isAlreadyScheduled ? (
-                            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                              Already scheduled
-                            </span>
-                          ) : todo.completed ? (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                              Completed
-                            </span>
-                          ) : (
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleRescheduleTodo(todo.id);
-                              }}
-                              className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
-                            >
-                              Reschedule
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-4xl mb-2">🔍</div>
-                <p className="text-gray-500">
-                  {searchTerm
-                    ? "No todos found matching your search"
-                    : "No todos available"}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-gray-200 bg-gray-50">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-600">
-                Click on a todo to reschedule it to the selected date
-              </p>
-              <button
-                onClick={() => {
-                  setShowTodoSelector(false);
-                  setShowTodoForm(true);
-                }}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Create New Todo
-              </button>
-            </div>
-          </div>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+          >
+            {editingTodo ? "Update Todo" : "Add Todo"}
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+          >
+            Cancel
+          </button>
         </div>
-      </div>
+      </form>
     );
   };
 
@@ -1602,11 +1377,6 @@ const Calendar: React.FC = () => {
           {view === "day" && renderDay()}
         </div>
       </div>
-
-      {/* Modals */}
-      {showTodoSelector && <TodoSelector />}
-      {showEventForm && <EventFormModal />}
-      {showTodoForm && <TodoFormModal />}
     </div>
   );
 };

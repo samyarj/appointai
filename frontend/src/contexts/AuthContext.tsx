@@ -3,7 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import {
   authAPI,
@@ -76,6 +76,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuth();
   }, []);
+
+  // Apply theme when user.theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const applyTheme = () => {
+      const theme = user?.theme || "light";
+      const isDark =
+        theme === "dark" ||
+        (theme === "auto" && mediaQuery.matches);
+
+      // Clean up legacy class on body just in case it persisted from previous versions
+      document.body.classList.remove("dark");
+
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+
+    applyTheme();
+
+    const handleSystemChange = () => {
+      if (user?.theme === "auto") {
+        applyTheme();
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleSystemChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleSystemChange);
+    };
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     try {

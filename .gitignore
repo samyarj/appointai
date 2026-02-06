@@ -144,3 +144,11 @@ docs/_build/
 # frontend/package-lock.json
 # frontend/yarn.lock
 # frontend/pnpm-lock.yaml
+
+# Additional Virtual Environments
+venv_new/
+backend/venv_new/
+
+# Global Pycache
+__pycache__/
+

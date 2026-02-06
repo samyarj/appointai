@@ -311,11 +311,11 @@ const Todo: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+        <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Todo List</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Todo List</h1>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
@@ -408,38 +408,38 @@ const Todo: React.FC = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 text-sm">Total</h3>
-              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
-              <p className="text-xs text-blue-600">Todos</p>
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">Total</h3>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Todos</p>
             </div>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 text-sm">
+            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">
                 Completed
               </h3>
-              <p className="text-2xl font-bold text-green-900">
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                 {stats.completed}
               </p>
-              <p className="text-xs text-green-600">Done</p>
+              <p className="text-xs text-green-600 dark:text-green-400">Done</p>
             </div>
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-800 text-sm">Pending</h3>
-              <p className="text-2xl font-bold text-yellow-900">
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 text-sm">Pending</h3>
+              <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
                 {stats.pending}
               </p>
-              <p className="text-xs text-yellow-600">To do</p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400">To do</p>
             </div>
-            <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4">
-              <h3 className="font-semibold text-red-800 text-sm">Overdue</h3>
-              <p className="text-2xl font-bold text-red-900">{stats.overdue}</p>
-              <p className="text-xs text-red-600">Late</p>
+            <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-red-800 dark:text-red-300 text-sm">Overdue</h3>
+              <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.overdue}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">Late</p>
             </div>
           </div>
 
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Filter:
               </label>
               <button
@@ -474,7 +474,7 @@ const Todo: React.FC = () => {
               </button>
             </div>
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Sort by:
               </label>
               <button
@@ -508,7 +508,7 @@ const Todo: React.FC = () => {
                 Created
               </button>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-500">
               Showing {filteredTodos.length} todos
             </div>
           </div>
@@ -563,16 +563,16 @@ const Todo: React.FC = () => {
             <>
               {/* Add/Edit Todo Form */}
               {showAddForm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                       {editingTodo ? "Edit Todo" : "Add New Todo"}
                     </h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Title *
                       </label>
                       <input
@@ -581,13 +581,13 @@ const Todo: React.FC = () => {
                         onChange={e =>
                           setNewTodo({ ...newTodo, title: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter todo title"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Priority
                       </label>
                       <select
@@ -598,7 +598,7 @@ const Todo: React.FC = () => {
                             priority: e.target.value as TodoItem["priority"],
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -607,7 +607,7 @@ const Todo: React.FC = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Description
                       </label>
                       <textarea
@@ -618,14 +618,14 @@ const Todo: React.FC = () => {
                             description: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Enter description (optional)"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Category
                       </label>
                       <select
@@ -638,7 +638,7 @@ const Todo: React.FC = () => {
                               : undefined,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select category (optional)</option>
                         {categories.map(category => (
@@ -650,7 +650,7 @@ const Todo: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Estimated Duration
                       </label>
                       <input
@@ -662,13 +662,13 @@ const Todo: React.FC = () => {
                             estimated_duration: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="e.g., 2 hours, 30 min"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Due Date
                       </label>
                       <input
@@ -677,7 +677,7 @@ const Todo: React.FC = () => {
                         onChange={e =>
                           setNewTodo({ ...newTodo, due_date: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -696,7 +696,7 @@ const Todo: React.FC = () => {
                           category_id: undefined,
                         });
                       }}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                     >
                       Cancel
                     </button>
@@ -723,11 +723,11 @@ const Todo: React.FC = () => {
                     return (
                       <div
                         key={todo.id}
-                        className={`group bg-white rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-blue-200 hover:-translate-y-1 ${
+                        className={`group bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-700 hover:-translate-y-1 ${
                           todo.completed
-                            ? "bg-gray-50 border-gray-200 opacity-75"
+                            ? "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 opacity-75"
                             : isOverdue
-                              ? "bg-red-50 border-red-200"
+                              ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/40"
                               : ""
                         }`}
                       >
@@ -737,7 +737,7 @@ const Todo: React.FC = () => {
                             className={`mt-1 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
                               todo.completed
                                 ? "bg-green-500 border-green-500 text-white"
-                                : "border-gray-300 hover:border-green-400"
+                                : "border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-400 text-gray-400 dark:text-gray-500"
                             }`}
                           >
                             {todo.completed && (
@@ -760,8 +760,8 @@ const Todo: React.FC = () => {
                               <h3
                                 className={`text-lg font-semibold ${
                                   todo.completed
-                                    ? "line-through text-gray-500"
-                                    : "text-gray-800"
+                                    ? "line-through text-gray-500 dark:text-gray-500"
+                                    : "text-gray-800 dark:text-gray-100"
                                 }`}
                               >
                                 {todo.title}
@@ -787,15 +787,15 @@ const Todo: React.FC = () => {
                               <p
                                 className={`text-sm mb-3 ${
                                   todo.completed
-                                    ? "text-gray-400"
-                                    : "text-gray-600"
+                                    ? "text-gray-400 dark:text-gray-500"
+                                    : "text-gray-600 dark:text-gray-300"
                                 }`}
                               >
                                 {todo.description}
                               </p>
                             )}
 
-                            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                            <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
                               {todo.estimated_duration && (
                                 <span className="flex items-center gap-1">
                                   <svg
@@ -890,11 +890,11 @@ const Todo: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">📝</div>
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
+                  <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">📝</div>
+                  <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
                     No todos found
                   </h3>
-                  <p className="text-gray-400 mb-6">
+                  <p className="text-gray-400 dark:text-gray-500 mb-6">
                     {filter === "all"
                       ? "Create your first todo to get started"
                       : `No ${filter} todos found`}
@@ -915,18 +915,18 @@ const Todo: React.FC = () => {
       {/* Confirmation Dialog */}
       {/* Confirmation Dialog */}
       {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               {confirmDialog.title}
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               {confirmDialog.message}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
               >
                 Cancel
               </button>

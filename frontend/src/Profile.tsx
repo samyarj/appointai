@@ -88,7 +88,7 @@ const useDebouncedProfileUpdate = (delay: number = 300) => {
 };
 
 const Profile: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
@@ -103,6 +103,8 @@ const Profile: React.FC = () => {
       .then(data => {
         setUser(data);
         setError(null);
+        // Also sync global user state
+        updateUser(data);
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
@@ -123,8 +125,11 @@ const Profile: React.FC = () => {
 
     const updatedUser = { ...user, [field]: value };
     setUser(updatedUser);
+    
+    // Update global context immediately for things like theme
+    updateUser({ [field]: value });
 
-    // Trigger debounced update
+    // Trigger debounced update for backend
     debouncedUpdate({ [field]: value });
   };
 
@@ -172,37 +177,37 @@ const Profile: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Full Name
           </label>
           <input
             type="text"
             value={user?.name || ""}
             onChange={e => handleInputChange("name", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Email Address
           </label>
           <input
             type="email"
             value={user?.email || ""}
             onChange={e => handleInputChange("email", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Timezone
           </label>
           <select
             value={user?.timezone || ""}
             onChange={e => handleInputChange("timezone", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="America/New_York">Eastern Time (ET)</option>
             <option value="America/Chicago">Central Time (CT)</option>
@@ -214,14 +219,14 @@ const Profile: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Member Since
           </label>
           <input
             type="text"
             value={user?.join_date || ""}
             disabled
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-300"
           />
         </div>
       </div>
@@ -232,13 +237,13 @@ const Profile: React.FC = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Date Format
           </label>
           <select
             value={user?.date_format || ""}
             onChange={e => handleInputChange("date_format", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2025)</option>
             <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2025)</option>
@@ -247,13 +252,13 @@ const Profile: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Time Format
           </label>
           <select
             value={user?.time_format || ""}
             onChange={e => handleInputChange("time_format", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="12h">12-hour (2:30 PM)</option>
             <option value="24h">24-hour (14:30)</option>
@@ -261,13 +266,13 @@ const Profile: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Theme
           </label>
           <select
             value={user?.theme || ""}
             onChange={e => handleInputChange("theme", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="light">Light</option>
             <option value="dark">Dark</option>
@@ -381,9 +386,9 @@ const Profile: React.FC = () => {
   const renderPrivacyTab = () => (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Profile Visibility</h4>
-          <p className="text-sm text-gray-500 mb-4">
+        <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Profile Visibility</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Choose who can see your profile
           </p>
           <select
@@ -395,7 +400,7 @@ const Profile: React.FC = () => {
                 e.target.value
               )
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 dark:text-white"
           >
             <option value="public">Public</option>
             <option value="private">Private</option>
@@ -428,7 +433,7 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
         <h4 className="text-lg font-semibold text-red-800 mb-4">Danger Zone</h4>
         <div className="space-y-3">
           <button className="w-full px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors">
@@ -460,15 +465,15 @@ const Profile: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                 Profile & Settings
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Manage your account settings and preferences.
               </p>
               {/* Save Status Display */}
@@ -538,8 +543,8 @@ const Profile: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 <span className="mr-2">{tab.icon}</span>

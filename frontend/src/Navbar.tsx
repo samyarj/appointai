@@ -136,24 +136,24 @@ const Navbar: React.FC = () => {
       };
     } else {
       const colorMap = {
-        gray: "text-gray-500 hover:text-gray-700",
-        blue: "text-blue-500 hover:text-blue-700",
-        green: "text-green-500 hover:text-green-700",
-        orange: "text-orange-500 hover:text-orange-700",
-        purple: "text-purple-500 hover:text-purple-700",
-        indigo: "text-indigo-500 hover:text-indigo-700",
+        gray: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200",
+        blue: "text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300",
+        green: "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300",
+        orange: "text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300",
+        purple: "text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300",
+        indigo: "text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300",
       };
 
       return {
         text: colorMap[color as keyof typeof colorMap],
-        bg: "hover:bg-blue-100",
-        border: "border-gray-200 hover:border-blue-300",
+        bg: "hover:bg-blue-100 dark:hover:bg-gray-700",
+        border: "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500",
       };
     }
   };
 
   return (
-    <nav className="fixed top-0 left-0 h-full w-20 z-50 bg-white shadow-lg border-r border-gray-200">
+    <nav className="fixed top-0 left-0 h-full w-20 z-50 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700">
       <div className="flex flex-col items-center py-6">
         <div className="flex flex-col gap-4">
           {navItems.map(item => {
@@ -163,7 +163,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`p-4 rounded-lg transition-colors border ${colors.text} ${colors.bg} ${colors.border}`}
+                className={`p-4 rounded-lg transition-colors border ${colors.text} ${colors.bg} ${colors.border} dark:border-gray-700`}
                 title={item.name}
               >
                 <div className={isActive ? "text-white" : ""}>{item.icon}</div>

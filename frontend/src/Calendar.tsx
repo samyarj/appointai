@@ -531,7 +531,7 @@ const Calendar: React.FC = () => {
             placeholder="Search todos to reschedule..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -557,12 +557,12 @@ const Calendar: React.FC = () => {
                 return (
                   <div
                     key={todo.id}
-                    className={`border rounded-lg p-3 transition-all duration-200 ${
+                     className={`border rounded-lg p-3 transition-all duration-200 ${
                       isAlreadyScheduled
-                        ? "border-green-300 bg-green-50"
+                        ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
                         : todo.completed
-                          ? "border-gray-200 bg-gray-50"
-                          : "border-gray-300 bg-white hover:bg-gray-50 cursor-pointer"
+                          ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                     }`}
                     onClick={() =>
                       !isAlreadyScheduled &&
@@ -576,14 +576,14 @@ const Calendar: React.FC = () => {
                           type="checkbox"
                           checked={todo.completed}
                           readOnly
-                          className="mt-1 w-3 h-3 text-green-600 bg-gray-100 border-gray-300 rounded"
+                          className="mt-1 w-3 h-3 text-green-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded"
                         />
                         <div className="flex-1">
                           <h5
                             className={`font-medium text-sm ${
                               todo.completed
-                                ? "text-gray-500 line-through"
-                                : "text-gray-800"
+                                ? "text-gray-500 dark:text-gray-500 line-through"
+                                : "text-gray-800 dark:text-white"
                             }`}
                           >
                             {todo.title}
@@ -592,8 +592,8 @@ const Calendar: React.FC = () => {
                             <p
                               className={`text-xs mt-1 ${
                                 todo.completed
-                                  ? "text-gray-400"
-                                  : "text-gray-600"
+                                  ? "text-gray-400 dark:text-gray-600"
+                                  : "text-gray-600 dark:text-gray-300"
                               }`}
                             >
                               {todo.description.length > 50
@@ -682,7 +682,7 @@ const Calendar: React.FC = () => {
           {daysOfWeek.map(d => (
             <div
               key={d}
-              className="font-semibold text-center text-gray-600 py-4"
+              className="font-semibold text-center text-gray-600 dark:text-gray-400 py-4"
             >
               {d}
             </div>
@@ -712,10 +712,10 @@ const Calendar: React.FC = () => {
                     isToday
                       ? "bg-blue-500 text-white font-bold shadow-lg"
                       : isPastDay
-                        ? "bg-gray-100 text-gray-400 border border-gray-150"
+                        ? "bg-gray-100 dark:bg-gray-900/50 text-gray-400 dark:text-gray-600 border border-gray-150 dark:border-gray-800"
                         : day
-                          ? "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
-                          : "text-gray-300"
+                          ? "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:border-blue-300 dark:hover:border-blue-500"
+                          : "text-gray-300 dark:text-gray-700"
                   }
                   ${
                     hasItemsForDay && !isToday && !isPastDay
@@ -742,7 +742,7 @@ const Calendar: React.FC = () => {
                       {itemCount.events > 0 && (
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            isPastDay ? "bg-gray-300" : "bg-blue-400"
+                            isPastDay ? "bg-gray-300 dark:bg-gray-600" : "bg-blue-400"
                           }`}
                           title={`${itemCount.events} event${itemCount.events !== 1 ? "s" : ""}`}
                         ></div>
@@ -750,7 +750,7 @@ const Calendar: React.FC = () => {
                       {itemCount.todos > 0 && (
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            isPastDay ? "bg-gray-300" : "bg-green-400"
+                            isPastDay ? "bg-gray-300 dark:bg-gray-600" : "bg-green-400"
                           }`}
                           title={`${itemCount.todos} todo${itemCount.todos !== 1 ? "s" : ""}`}
                         ></div>
@@ -779,7 +779,7 @@ const Calendar: React.FC = () => {
     return (
       <div className="grid grid-cols-7 gap-3 mb-6">
         {daysOfWeek.map(d => (
-          <div key={d} className="font-semibold text-center text-gray-600 py-4">
+          <div key={d} className="font-semibold text-center text-gray-600 dark:text-gray-400 py-4">
             {d}
           </div>
         ))}
@@ -802,8 +802,8 @@ const Calendar: React.FC = () => {
                   isToday
                     ? "bg-blue-500 text-white font-bold shadow-lg"
                     : isPastDay
-                      ? "bg-gray-100 text-gray-400 border border-gray-150"
-                      : "bg-white border border-gray-200 text-gray-800 hover:border-blue-300"
+                      ? "bg-gray-100 dark:bg-gray-900/50 text-gray-400 dark:text-gray-600 border border-gray-150 dark:border-gray-800"
+                      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:border-blue-300 dark:hover:border-blue-500"
                 }
                 ${
                   hasItemsForDay && !isToday && !isPastDay
@@ -827,7 +827,7 @@ const Calendar: React.FC = () => {
               {hasItemsForDay && (
                 <div
                   className={`text-sm mt-2 ${
-                    isPastDay ? "text-gray-400" : "text-green-600"
+                    isPastDay ? "text-gray-400 dark:text-gray-600" : "text-green-600 dark:text-green-400"
                   }`}
                 >
                   {itemCount.total} item{itemCount.total !== 1 ? "s" : ""}
@@ -851,16 +851,16 @@ const Calendar: React.FC = () => {
         {months.map((m, idx) => (
           <div
             key={m}
-            className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm"
+            className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 shadow-sm"
           >
-            <div className="font-bold text-center mb-6 text-gray-700 text-xl">
+            <div className="font-bold text-center mb-6 text-gray-700 dark:text-gray-200 text-xl">
               {m}
             </div>
             <div className="grid grid-cols-7 gap-1.5 text-sm">
               {daysOfWeek.map(d => (
                 <div
                   key={d}
-                  className="font-semibold text-center text-gray-500 py-2"
+                  className="font-semibold text-center text-gray-500 dark:text-gray-400 py-2"
                 >
                   {d[0]}
                 </div>
@@ -892,10 +892,10 @@ const Calendar: React.FC = () => {
                           isToday
                             ? "bg-blue-500 text-white font-bold"
                             : isPastDay
-                              ? "bg-gray-100 text-gray-400"
+                              ? "bg-gray-100 dark:bg-gray-900/50 text-gray-400 dark:text-gray-600"
                               : day
-                                ? "bg-gray-50 text-gray-700 hover:bg-blue-50"
-                                : "text-gray-300"
+                                ? "bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                : "text-gray-300 dark:text-gray-700"
                         }
                         ${
                           hasItemsForDay && !isToday && !isPastDay
@@ -927,9 +927,9 @@ const Calendar: React.FC = () => {
     const dayTodos = getTodosForDate(currentDate);
 
     return (
-      <div className="bg-gray-50 rounded-lg p-6">
+      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">
             {currentDate.toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -941,9 +941,9 @@ const Calendar: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Events Section */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center">
                 <span className="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
                 Events ({dayEvents.length})
               </h3>
@@ -965,8 +965,8 @@ const Calendar: React.FC = () => {
 
             {/* Inline Event Form */}
             {showEventForm && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 mb-4 shadow-lg">
-                <h4 className="text-md font-semibold text-gray-800 mb-3">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">
                   {editingEvent ? "Edit Event" : "Add New Event"}
                 </h4>
                 <EventForm currentDate={currentDate} />
@@ -978,18 +978,18 @@ const Calendar: React.FC = () => {
                 {dayEvents.map(event => (
                   <div
                     key={event.id}
-                    className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-semibold text-gray-800 text-lg">
+                        <h4 className="font-semibold text-gray-800 dark:text-white text-lg">
                           {event.title}
                         </h4>
-                        <p className="text-blue-600 font-medium mt-1">
+                        <p className="text-blue-600 dark:text-blue-400 font-medium mt-1">
                           {event.startTime} - {event.endTime}
                         </p>
                         {event.duration && (
-                          <p className="text-gray-600 text-sm mt-1">
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                             Duration: {event.duration}
                           </p>
                         )}
@@ -1026,9 +1026,9 @@ const Calendar: React.FC = () => {
           </div>
 
           {/* Todos Section */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center">
                 <span className="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
                 Todos ({dayTodos.length})
               </h3>
@@ -1066,8 +1066,8 @@ const Calendar: React.FC = () => {
 
             {/* Todo Search/Reschedule */}
             {showTodoSelector && (
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-4 shadow-lg">
-                <h4 className="text-md font-semibold text-gray-800 mb-3">
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 dark:text-white mb-3">
                   Reschedule Existing Todo
                 </h4>
                 <TodoSelector currentDate={currentDate} />
@@ -1076,8 +1076,8 @@ const Calendar: React.FC = () => {
 
             {/* Inline Todo Form */}
             {showTodoForm && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-4 shadow-lg">
-                <h4 className="text-md font-semibold text-gray-800 mb-3">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-4 mb-4 shadow-lg">
+                <h4 className="text-md font-semibold text-gray-800 dark:text-white mb-3">
                   {editingTodo ? "Edit Todo" : "Add New Todo"}
                 </h4>
                 <TodoForm currentDate={currentDate} />
@@ -1091,8 +1091,8 @@ const Calendar: React.FC = () => {
                     key={todo.id}
                     className={`border rounded-lg p-4 hover:shadow-md transition-all duration-200 ${
                       todo.completed
-                        ? "bg-gray-50 border-gray-200"
-                        : "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+                        ? "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                        : "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border-green-200 dark:border-green-800"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -1103,14 +1103,14 @@ const Calendar: React.FC = () => {
                           onChange={() =>
                             handleToggleTodo(todo.id, !todo.completed)
                           }
-                          className="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                          className="mt-1 w-4 h-4 text-green-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
                         />
                         <div>
                           <h4
                             className={`font-semibold text-lg ${
                               todo.completed
-                                ? "text-gray-500 line-through"
-                                : "text-gray-800"
+                                ? "text-gray-500 dark:text-gray-500 line-through"
+                                : "text-gray-800 dark:text-white"
                             }`}
                           >
                             {todo.title}
@@ -1119,8 +1119,8 @@ const Calendar: React.FC = () => {
                             <p
                               className={`text-sm mt-1 ${
                                 todo.completed
-                                  ? "text-gray-400"
-                                  : "text-gray-600"
+                                  ? "text-gray-400 dark:text-gray-600"
+                                  : "text-gray-600 dark:text-gray-300"
                               }`}
                             >
                               {todo.description}
@@ -1212,7 +1212,7 @@ const Calendar: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Event Title *
             </label>
             <input
@@ -1223,11 +1223,11 @@ const Calendar: React.FC = () => {
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="Enter event title"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Date *
             </label>
             <input
@@ -1235,7 +1235,7 @@ const Calendar: React.FC = () => {
               required
               value={formData.date}
               onChange={e => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -1247,7 +1247,7 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, category_id: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a category</option>
               {categories.map(cat => (
@@ -1258,7 +1258,7 @@ const Calendar: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start Time *
             </label>
             <input
@@ -1268,11 +1268,11 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, startTime: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               End Time *
             </label>
             <input
@@ -1282,7 +1282,7 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, endTime: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -1346,7 +1346,7 @@ const Calendar: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Title *
             </label>
             <input
@@ -1357,11 +1357,11 @@ const Calendar: React.FC = () => {
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="Enter todo title"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Priority
             </label>
             <select
@@ -1369,7 +1369,7 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, priority: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="">Select priority</option>
               <option value="low">Low</option>
@@ -1378,7 +1378,7 @@ const Calendar: React.FC = () => {
             </select>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
             </label>
             <textarea
@@ -1387,12 +1387,12 @@ const Calendar: React.FC = () => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Enter description (optional)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               rows={3}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Due Date *
             </label>
             <input
@@ -1402,7 +1402,7 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, due_date: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <div>
@@ -1414,7 +1414,7 @@ const Calendar: React.FC = () => {
               onChange={e =>
                 setFormData({ ...formData, category_id: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="">Select a category</option>
               {categories.map(cat => (
@@ -1425,7 +1425,7 @@ const Calendar: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Est. Duration
             </label>
             <input
@@ -1450,9 +1450,9 @@ const Calendar: React.FC = () => {
                   onChange={e =>
                     setFormData({ ...formData, completed: e.target.checked })
                   }
-                  className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                  className="w-4 h-4 text-green-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   Mark as completed
                 </span>
               </label>
@@ -1484,7 +1484,7 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header with navigation and view toggles */}
         <div className="flex flex-col sm:flex-row justify-between items-center p-8 pb-6 gap-4 flex-shrink-0">
           <div className="flex gap-2">
@@ -1492,7 +1492,7 @@ const Calendar: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 view === "year"
                   ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
               onClick={() => setView("year")}
             >
@@ -1502,7 +1502,7 @@ const Calendar: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 view === "month"
                   ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
               onClick={() => setView("month")}
             >
@@ -1512,7 +1512,7 @@ const Calendar: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 view === "week"
                   ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
               onClick={() => setView("week")}
             >
@@ -1522,7 +1522,7 @@ const Calendar: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 view === "day"
                   ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
               onClick={() => setView("day")}
             >
@@ -1533,7 +1533,7 @@ const Calendar: React.FC = () => {
           <div className="flex gap-3 items-center">
             <button
               onClick={goPrev}
-              className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -1552,12 +1552,12 @@ const Calendar: React.FC = () => {
 
             <button
               onClick={goToday}
-              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+              className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-colors font-medium"
             >
               Today
             </button>
 
-            <span className="font-bold text-xl text-gray-800">
+            <span className="font-bold text-xl text-gray-800 dark:text-white">
               {view === "month"
                 ? `${months[current.month]} ${current.year}`
                 : view === "week"
@@ -1578,7 +1578,7 @@ const Calendar: React.FC = () => {
 
             <button
               onClick={goNext}
-              className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -1602,14 +1602,14 @@ const Calendar: React.FC = () => {
           {/* Time Progress */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 {getProgressLabel()}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {getProgressForView().toFixed(1)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
               <div
                 className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${getProgressForView()}%` }}
@@ -1620,14 +1620,14 @@ const Calendar: React.FC = () => {
           {/* Event Density */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Event Density for {view}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {getEventDensityForView().toFixed(2)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
                 className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{
@@ -1649,18 +1649,18 @@ const Calendar: React.FC = () => {
 
       {/* Confirmation Dialog */}
       {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+          <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               {confirmDialog.title}
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               {confirmDialog.message}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
               >
                 Cancel
               </button>

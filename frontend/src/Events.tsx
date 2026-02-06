@@ -347,11 +347,11 @@ const Events: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+        <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Events</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Events</h1>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
@@ -388,38 +388,38 @@ const Events: React.FC = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 text-sm">Total</h3>
-              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
-              <p className="text-xs text-blue-600">Events</p>
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">Total</h3>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Events</p>
             </div>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 text-sm">Upcoming</h3>
-              <p className="text-2xl font-bold text-green-900">
+            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">Upcoming</h3>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                 {stats.upcoming}
               </p>
-              <p className="text-xs text-green-600">Scheduled</p>
+              <p className="text-xs text-green-600 dark:text-green-400">Scheduled</p>
             </div>
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 text-sm">Past</h3>
-              <p className="text-2xl font-bold text-purple-900">{stats.past}</p>
-              <p className="text-xs text-purple-600">Completed</p>
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-purple-800 dark:text-purple-300 text-sm">Past</h3>
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.past}</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Completed</p>
             </div>
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
-              <h3 className="font-semibold text-orange-800 text-sm">
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-orange-800 dark:text-orange-300 text-sm">
                 This Month
               </h3>
-              <p className="text-2xl font-bold text-orange-900">
+              <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                 {stats.thisMonth}
               </p>
-              <p className="text-xs text-orange-600">Events</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400">Events</p>
             </div>
           </div>
 
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Filter:
               </label>
               <button
@@ -454,7 +454,7 @@ const Events: React.FC = () => {
               </button>
             </div>
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Sort by:
               </label>
               <button
@@ -488,7 +488,7 @@ const Events: React.FC = () => {
                 Created
               </button>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-500">
               Showing {filteredEvents.length} events
             </div>
           </div>
@@ -513,13 +513,13 @@ const Events: React.FC = () => {
             <>
               {/* Add/Edit Event Form */}
               {showAddForm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                     {editingEvent ? "Edit Event" : "Add New Event"}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Event Title *
                       </label>
                       <input
@@ -529,11 +529,11 @@ const Events: React.FC = () => {
                           setNewEvent({ ...newEvent, title: e.target.value })
                         }
                         placeholder="Enter event title"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Date *
                       </label>
                       <input
@@ -542,11 +542,11 @@ const Events: React.FC = () => {
                         onChange={e =>
                           setNewEvent({ ...newEvent, date: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Category
                       </label>
                       <select
@@ -559,7 +559,7 @@ const Events: React.FC = () => {
                               : undefined,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
                       >
                         <option value="">Select a category</option>
                         {categories.map(category => (
@@ -570,7 +570,7 @@ const Events: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Start Time *
                       </label>
                       <input
@@ -586,7 +586,7 @@ const Events: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         End Time *
                       </label>
                       <input
@@ -621,8 +621,8 @@ const Events: React.FC = () => {
                           category_id: undefined,
                         });
                       }}
-                      className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
-                    >
+                        className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
+                      >
                       Cancel
                     </button>
                   </div>
@@ -645,10 +645,10 @@ const Events: React.FC = () => {
                         key={event.id}
                         className={`border rounded-xl p-6 transition-all duration-200 hover:shadow-md ${
                           isPast
-                            ? "bg-gray-50 border-gray-200"
+                            ? "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
                             : isToday
-                              ? "bg-blue-50 border-blue-200"
-                              : "bg-white border-gray-200 hover:border-blue-300"
+                              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
                         }`}
                       >
                         <div className="flex items-start justify-between">
@@ -658,13 +658,13 @@ const Events: React.FC = () => {
                                 className="w-4 h-4 rounded-full"
                                 style={{ backgroundColor: categoryColor }}
                               ></div>
-                              <h3
-                                className={`font-semibold text-xl ${
-                                  isPast ? "text-gray-600" : "text-gray-800"
-                                }`}
-                              >
-                                {event.title}
-                              </h3>
+                                <h3
+                                  className={`font-semibold text-xl ${
+                                    isPast ? "text-gray-600 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
+                                  }`}
+                                >
+                                  {event.title}
+                                </h3>
                               {isToday && (
                                 <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-medium">
                                   Today
@@ -676,11 +676,11 @@ const Events: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <div
-                              className={`space-y-2 text-sm ${
-                                isPast ? "text-gray-500" : "text-gray-600"
-                              }`}
-                            >
+                              <div
+                                className={`space-y-2 text-sm ${
+                                  isPast ? "text-gray-500 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"
+                                }`}
+                              >
                               <div className="flex items-center gap-2">
                                 <span>📅</span>
                                 <span className="font-medium">
@@ -735,11 +735,11 @@ const Events: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">📅</div>
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
+                  <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">📅</div>
+                  <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
                     No events found
                   </h3>
-                  <p className="text-gray-400 mb-6">
+                  <p className="text-gray-400 dark:text-gray-500 mb-6">
                     {filterBy === "upcoming"
                       ? "No upcoming events scheduled"
                       : filterBy === "past"
@@ -761,18 +761,18 @@ const Events: React.FC = () => {
 
       {/* Confirmation Dialog */}
       {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               {confirmDialog.title}
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               {confirmDialog.message}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
               >
                 Cancel
               </button>

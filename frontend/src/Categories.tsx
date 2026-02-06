@@ -235,11 +235,11 @@ const Categories: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+        <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Categories</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Categories</h1>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
@@ -332,42 +332,42 @@ const Categories: React.FC = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 text-sm">Total</h3>
-              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
-              <p className="text-xs text-blue-600">Categories</p>
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">Total</h3>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Categories</p>
             </div>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 text-sm">Usage</h3>
-              <p className="text-2xl font-bold text-green-900">
+            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">Usage</h3>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                 {stats.totalUsage}
               </p>
-              <p className="text-xs text-green-600">Total uses</p>
+              <p className="text-xs text-green-600 dark:text-green-400">Total uses</p>
             </div>
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 text-sm">
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-purple-800 dark:text-purple-300 text-sm">
                 Most Used
               </h3>
-              <p className="text-2xl font-bold text-purple-900">
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
                 {stats.mostUsed?.name || "None"}
               </p>
-              <p className="text-xs text-purple-600">
+              <p className="text-xs text-purple-600 dark:text-purple-400">
                 {stats.mostUsed?.usage_count || 0} uses
               </p>
             </div>
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
-              <h3 className="font-semibold text-orange-800 text-sm">Recent</h3>
-              <p className="text-2xl font-bold text-orange-900">
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg p-4">
+              <h3 className="font-semibold text-orange-800 dark:text-orange-300 text-sm">Recent</h3>
+              <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                 {stats.recent}
               </p>
-              <p className="text-xs text-orange-600">This week</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400">This week</p>
             </div>
           </div>
 
           {/* Sort Controls */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2">
-              <label className="text-sm font-medium text-gray-600">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Sort by:
               </label>
               <button
@@ -401,7 +401,7 @@ const Categories: React.FC = () => {
                 Created
               </button>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-500">
               Showing {sortedCategories.length} categories
             </div>
           </div>
@@ -450,13 +450,13 @@ const Categories: React.FC = () => {
             <>
               {/* Add/Edit Category Form */}
               {showAddForm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-1">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
                         {editingCategory ? "Edit Category" : "Add New Category"}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {editingCategory
                           ? "Update your category information below"
                           : "Create a new category to organize your events and todos"}
@@ -492,7 +492,7 @@ const Categories: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Category Name *
                       </label>
                       <input
@@ -504,7 +504,7 @@ const Categories: React.FC = () => {
                             name: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="Enter category name"
                         disabled={actionStatus.type === "loading"}
                       />
@@ -516,7 +516,7 @@ const Categories: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Color
                       </label>
                       <div className="grid grid-cols-5 gap-3">
@@ -551,7 +551,7 @@ const Categories: React.FC = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Description
                       </label>
                       <textarea
@@ -562,7 +562,7 @@ const Categories: React.FC = () => {
                             description: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                         rows={3}
                         placeholder="Enter description (optional)"
                         disabled={actionStatus.type === "loading"}
@@ -582,7 +582,7 @@ const Categories: React.FC = () => {
                           description: "",
                         });
                       }}
-                      className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                       disabled={actionStatus.type === "loading"}
                     >
                       Cancel
@@ -618,7 +618,7 @@ const Categories: React.FC = () => {
                   {sortedCategories.map(category => (
                     <div
                       key={category.id}
-                      className="group bg-white rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-blue-200 hover:-translate-y-1 cursor-pointer"
+                      className="group bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-700 hover:-translate-y-1 cursor-pointer"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -626,7 +626,7 @@ const Categories: React.FC = () => {
                             className="w-10 h-10 rounded-full border-2 border-white shadow-lg group-hover:scale-110 transition-transform duration-200"
                             style={{ backgroundColor: category.color }}
                           ></div>
-                          <h3 className="font-bold text-gray-800 text-lg group-hover:text-blue-600 transition-colors">
+                          <h3 className="font-bold text-gray-800 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {category.name}
                           </h3>
                         </div>
@@ -636,7 +636,7 @@ const Categories: React.FC = () => {
                               e.stopPropagation();
                               handleEditCategory(category);
                             }}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                             title="Edit category"
                           >
                             <svg
@@ -658,7 +658,7 @@ const Categories: React.FC = () => {
                               e.stopPropagation();
                               handleDeleteCategory(category.id);
                             }}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             title="Delete category"
                           >
                             <svg
@@ -679,13 +679,13 @@ const Categories: React.FC = () => {
                       </div>
 
                       {category.description && (
-                        <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 leading-relaxed">
                           {category.description}
                         </p>
                       )}
 
-                      <div className="flex justify-between items-center text-xs text-gray-500 pt-4 border-t border-gray-100">
-                        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
+                      <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <span className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-full">
                           <svg
                             className="w-3 h-3"
                             fill="none"
@@ -701,7 +701,7 @@ const Categories: React.FC = () => {
                           </svg>
                           {category.usage_count} uses
                         </span>
-                        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
+                        <span className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-full">
                           <svg
                             className="w-3 h-3"
                             fill="none"
@@ -736,10 +736,10 @@ const Categories: React.FC = () => {
                       d="M19 11H5m14-7H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"
                     />
                   </svg>
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
+                  <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
                     No categories found
                   </h3>
-                  <p className="text-gray-400 mb-4">
+                  <p className="text-gray-400 dark:text-gray-500 mb-4">
                     Create your first category to organize your events and
                     todos.
                   </p>
@@ -759,18 +759,18 @@ const Categories: React.FC = () => {
       {/* Confirmation Dialog */}
       {/* Confirmation Dialog */}
       {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               {confirmDialog.title}
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               {confirmDialog.message}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 font-medium transition-all duration-200 rounded-lg border border-gray-300"
+                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
               >
                 Cancel
               </button>

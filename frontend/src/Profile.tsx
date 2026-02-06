@@ -169,7 +169,7 @@ const Profile: React.FC = () => {
           <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
             Change Avatar
           </button>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             Upload a new profile picture (JPG, PNG max 5MB)
           </p>
         </div>
@@ -286,10 +286,10 @@ const Profile: React.FC = () => {
   const renderNotificationsTab = () => (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900">Email Notifications</h4>
-            <p className="text-sm text-gray-500">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Email Notifications</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Receive notifications via email
             </p>
           </div>
@@ -310,10 +310,10 @@ const Profile: React.FC = () => {
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900">Push Notifications</h4>
-            <p className="text-sm text-gray-500">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Push Notifications</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Receive push notifications in browser
             </p>
           </div>
@@ -334,10 +334,10 @@ const Profile: React.FC = () => {
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900">Event Reminders</h4>
-            <p className="text-sm text-gray-500">Get reminded before events</p>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Event Reminders</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Get reminded before events</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -356,10 +356,10 @@ const Profile: React.FC = () => {
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900">Weekly Digest</h4>
-            <p className="text-sm text-gray-500">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Weekly Digest</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Weekly summary of your activities
             </p>
           </div>
@@ -408,10 +408,10 @@ const Profile: React.FC = () => {
           </select>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900">Show Activity Status</h4>
-            <p className="text-sm text-gray-500">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Show Activity Status</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Let others see when you're active
             </p>
           </div>
@@ -434,9 +434,9 @@ const Profile: React.FC = () => {
       </div>
 
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-red-800 mb-4">Danger Zone</h4>
+        <h4 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-4">Danger Zone</h4>
         <div className="space-y-3">
-          <button className="w-full px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors">
+          <button className="w-full px-4 py-2 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
             Clear All Data
           </button>
           <button className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
@@ -467,7 +467,7 @@ const Profile: React.FC = () => {
     <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+        <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
@@ -531,7 +531,7 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex space-x-8 border-b border-gray-200">
+          <div className="flex space-x-8 border-b border-gray-200 dark:border-gray-700">
             {[
               { id: "profile", label: "Profile", icon: "👤" },
               { id: "preferences", label: "Preferences", icon: "⚙️" },

@@ -8,7 +8,11 @@ from datetime import datetime
 class CategoryService:
     @staticmethod
     def get_categories(db: Session) -> List[Category]:
-        return db.query(Category).all()
+        categories = db.query(Category).all()
+        # Dynamically calculate usage count based on relationships
+        for category in categories:
+            category.usage_count = len(category.events) + len(category.todos)
+        return categories
 
     @staticmethod
     def create_category(db: Session, category_data: CategoryCreateSchema) -> Category:
@@ -65,6 +69,9 @@ class CategoryService:
                 
             db.commit()
             db.refresh(category)
+            
+            # Update usage count for return value
+            category.usage_count = len(category.events) + len(category.todos)
             return category
             
         except (NotFoundException, BadRequestException):
@@ -81,7 +88,8 @@ class CategoryService:
                 raise NotFoundException(detail="Category not found")
             
             # Check if category is being used by any events or todos
-            if category.usage_count > 0:
+            # We check the relationships directly instead of the usage_count column
+            if len(category.events) > 0 or len(category.todos) > 0:
                 raise BadRequestException(
                     detail="Cannot delete category that is being used by events or todos"
                 )

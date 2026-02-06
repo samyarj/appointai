@@ -234,8 +234,8 @@ const Categories: React.FC = () => {
   const stats = getStats();
 
   return (
-    <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden h-full">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-6">
@@ -784,7 +784,7 @@ const Categories: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

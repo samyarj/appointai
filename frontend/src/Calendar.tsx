@@ -707,7 +707,7 @@ const Calendar: React.FC = () => {
                 onClick={() => day && selectDay(day)}
                 className={`
                   h-24 flex items-center justify-center rounded-lg cursor-pointer transition-all duration-200
-                  ${day ? "hover:bg-blue-50 hover:shadow-md" : ""}
+                  ${day ? "hover:bg-blue-50 dark:hover:bg-gray-700 hover:shadow-md" : ""}
                   ${
                     isToday
                       ? "bg-blue-500 text-white font-bold shadow-lg"
@@ -797,7 +797,7 @@ const Calendar: React.FC = () => {
               }
               className={`
                 h-32 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all duration-200
-                hover:bg-blue-50 hover:shadow-md
+                hover:bg-blue-50 dark:hover:bg-gray-700 hover:shadow-md
                 ${
                   isToday
                     ? "bg-blue-500 text-white font-bold shadow-lg"
@@ -1483,8 +1483,8 @@ const Calendar: React.FC = () => {
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="h-full flex flex-col max-w-6xl mx-auto px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden">
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex-1 flex flex-col overflow-hidden h-full">
         {/* Header with navigation and view toggles */}
         <div className="flex flex-col sm:flex-row justify-between items-center p-8 pb-6 gap-4 flex-shrink-0">
           <div className="flex gap-2">
@@ -1674,7 +1674,7 @@ const Calendar: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

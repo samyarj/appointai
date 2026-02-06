@@ -115,14 +115,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login(email, password);
-      const userData = {
-        id: response.user_id,
-        name: response.user_name,
-        email: response.user_email,
-      };
-      setUser(userData);
-      setUserInfo(userData);
+      // Set token first so subsequent requests are authenticated
       setAuthToken(response.access_token);
+      
+      // Fetch full user details immediately to get theme and other preferences
+      const currentUser = await authAPI.getCurrentUser();
+      
+      setUser(currentUser);
+      setUserInfo(currentUser);
+      
       return response;
     } catch (error) {
       throw error;

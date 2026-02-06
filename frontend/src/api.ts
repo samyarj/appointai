@@ -293,4 +293,14 @@ export const eventAPI = {
   },
 };
 
+// Chat API functions
+export const chatAPI = {
+  sendMessage: async (message: string, localTime: string) => {
+    return await fetchAPI("/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ message, local_time: localTime }),
+    });
+  },
+};
+
 export default API_URL;

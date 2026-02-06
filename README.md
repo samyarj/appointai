@@ -64,6 +64,7 @@ A modern calendar and task management application built with FastAPI (backend) a
    DATABASE_URL=postgresql://user:password@localhost/appointai
    SECRET_KEY=your-secret-key-change-in-production
    FRONTEND_URL=http://localhost:5173
+   GEMINI_API_KEY=your-google-gemini-api-key # Required for Chat Assistant
    ```
 
 4. **Run database migration**

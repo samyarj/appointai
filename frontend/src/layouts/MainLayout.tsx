@@ -1,5 +1,6 @@
 import React, { type ReactNode } from 'react';
 import Navbar from '../Navbar';
+import ChatAssistant from '../components/ChatAssistant';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {children}
         </div>
       </div>
+      <ChatAssistant />
     </div>
   );
 };

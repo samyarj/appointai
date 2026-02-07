@@ -1,10 +1,9 @@
 import os
 import json
 import logging
-from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-import google.generativeai as genai
+from groq import AsyncGroq
 
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.event import EventCreateSchema
@@ -19,17 +18,15 @@ logger = logging.getLogger(__name__)
 
 class ChatService:
     @staticmethod
-    def _configure_genai():
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            return False
-        genai.configure(api_key=api_key)
-        return True
-
-    @staticmethod
     async def process_message(db: Session, user: User, request: ChatRequest) -> ChatResponse:
-        has_key = ChatService._configure_genai()
+        api_key = os.getenv("GROQ_API_KEY")
         
+        if not api_key:
+            return ChatResponse(
+                response="I'm ready to help, but the GROQ_API_KEY is missing from the backend environment variables. Please add it to use the AI features.",
+                action_taken="error"
+            )
+
         # Fetch categories to provide context
         categories = db.query(Category).all()
         category_names = [c.name for c in categories]
@@ -79,24 +76,32 @@ class ChatService:
         - If you cannot understand, set intent to "unknown" and ask for clarification in response_text.
         """
         
-        if not has_key:
-            # Fallback for when no API key is present (Simple Regex or message)
-            return ChatResponse(
-                response="I'm ready to help, but the GEMINI_API_KEY is missing from the backend environment variables. Please add it to use the AI features.",
-                action_taken="error"
-            )
-
         try:
             logger.info(f"Processing chat request: {request.message}")
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content([system_prompt, request.message])
             
-            # clean response parsing
-            text_response = response.text.strip()
+            client = AsyncGroq(api_key=api_key)
+            completion = await client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": request.message
+                    }
+                ],
+                temperature=0.1, # Lower temperature for better JSON consistency
+                max_completion_tokens=1024,
+                top_p=1,
+                stream=False,
+                stop=None,
+                response_format={"type": "json_object"}
+            )
+            
+            text_response = completion.choices[0].message.content
             logger.info(f"LLM Raw Response: {text_response}")
-            
-            if text_response.startswith("```json"):
-                text_response = text_response.replace("```json", "").replace("```", "")
             
             parsed = json.loads(text_response)
             logger.info(f"Parsed Intent: {parsed.get('intent')}")

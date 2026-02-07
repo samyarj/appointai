@@ -25,6 +25,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Import chat router
+from app.api.v1.endpoints import chat
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+
 # Configure CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,

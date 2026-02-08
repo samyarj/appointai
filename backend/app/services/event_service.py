@@ -21,6 +21,8 @@ class EventService:
                 end_time=datetime.strptime(event_data.endTime, "%H:%M").time(),
                 category_id=event_data.category_id,
                 duration=event_data.duration,
+                is_recurring=event_data.is_recurring,
+                recurrence_rule=event_data.recurrence_rule,
                 created_at=datetime.utcnow()
             )
             db.add(event)
@@ -58,6 +60,10 @@ class EventService:
                 event.category_id = event_data.category_id
             if event_data.duration is not None:
                 event.duration = event_data.duration
+            if event_data.is_recurring is not None:
+                event.is_recurring = event_data.is_recurring
+            if event_data.recurrence_rule is not None:
+                event.recurrence_rule = event_data.recurrence_rule
                 
             db.commit()
             db.refresh(event)

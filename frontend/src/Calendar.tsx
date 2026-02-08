@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { eventAPI, todoAPI, categoryAPI } from "./api";
+import { RRule } from "rrule";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const months = [
@@ -28,6 +29,9 @@ export type Event = {
   startTime: string;
   endTime: string;
   duration?: string;
+  is_recurring?: boolean;
+  recurrence_rule?: string;
+  original_event_id?: number;
   createdAt?: string;
 };
 
@@ -96,6 +100,53 @@ const Calendar: React.FC = () => {
     loadData();
   }, []);
 
+  const expandRecurringEvents = (rawEvents: Event[]): Event[] => {
+    const expanded: Event[] = [];
+    const now = new Date();
+    // Look ahead 1 year for recurrence expansion by default
+    const limitDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+    rawEvents.forEach(event => {
+      // Always add the original event 
+      expanded.push(event);
+
+      if (event.is_recurring && event.recurrence_rule) {
+        try {
+          const ruleOptions = RRule.parseString(event.recurrence_rule);
+          
+          // Ensure DTSTART is set to event date for correct calculations
+          const [year, month, day] = event.date.split("-").map(Number);
+          ruleOptions.dtstart = new Date(year, month - 1, day);
+          
+          const rule = new RRule(ruleOptions);
+          // Use dtstart as start to include all occurrences, not just future ones
+          const occurrences = rule.between(ruleOptions.dtstart, limitDate, true); 
+          
+          occurrences.forEach((date, index) => {
+             // format YYYY-MM-DD
+             const year = date.getFullYear();
+             const month = String(date.getMonth() + 1).padStart(2, '0');
+             const day = String(date.getDate()).padStart(2, '0');
+             const dateStr = `${year}-${month}-${day}`;
+             
+             if (dateStr === event.date) return; // Skip original date
+
+             expanded.push({
+               ...event,
+               id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
+               original_event_id: event.id,
+               date: dateStr,
+             });
+          });
+
+        } catch (err) {
+          console.error("Failed to parse recurrence rule", err, event);
+        }
+      }
+    });
+    return expanded;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -104,7 +155,10 @@ const Calendar: React.FC = () => {
         todoAPI.getTodos(),
         categoryAPI.getCategories(),
       ]);
-      setEvents(eventsData);
+      
+      const expandedEvents = expandRecurringEvents(eventsData);
+      setEvents(expandedEvents);
+      
       setTodos(todosData);
       setCategories(categoriesData);
       setError(null);
@@ -395,18 +449,27 @@ const Calendar: React.FC = () => {
     });
   };
 
-  // CRUD handlers for events
+  /* CRUD handlers for events */
   const handleDeleteEvent = async (eventId: number) => {
     const event = events.find(e => e.id === eventId);
-    const eventName = event ? event.title : "this event";
+    if (!event) return;
+
+    const isInstance = !!event.original_event_id;
+    const targetId = event.original_event_id || event.id;
+    const eventName = event.title;
+    
+    const message = isInstance 
+       ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
+       : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
     showConfirmDialog(
       "Delete Event",
-      `Are you sure you want to delete "${eventName}"? This action cannot be undone.`,
+      message,
       async () => {
         try {
-          await eventAPI.deleteEvent(eventId);
-          setEvents(events.filter(e => e.id !== eventId));
+          await eventAPI.deleteEvent(targetId);
+          // Reload data to correctly refresh expanded events
+          await loadData(); 
         } catch (err: any) {
           setError(err.message);
         }
@@ -417,17 +480,20 @@ const Calendar: React.FC = () => {
   const handleSaveEvent = async (eventData: Omit<Event, "id">) => {
     try {
       if (editingEvent) {
-        const updatedEvent = await eventAPI.updateEvent(
+        if (editingEvent.original_event_id) {
+           // Should have been caught by edit button click, but double check
+           alert("Cannot edit instance directly. Please edit the original event.");
+           return;
+        }
+        await eventAPI.updateEvent(
           editingEvent.id,
           eventData
         );
-        setEvents(
-          events.map(e => (e.id === editingEvent.id ? updatedEvent : e))
-        );
+        await loadData();
         setEditingEvent(null);
       } else {
-        const newEvent = await eventAPI.createEvent(eventData);
-        setEvents([...events, newEvent]);
+        await eventAPI.createEvent(eventData);
+        await loadData();
       }
       setShowEventForm(false);
     } catch (err: any) {

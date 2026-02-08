@@ -260,6 +260,8 @@ export const eventAPI = {
     endTime: string;
     category_id?: number;
     duration?: string;
+    is_recurring?: boolean;
+    recurrence_rule?: string;
   }) => {
     return await fetchAPI("/api/events", {
       method: "POST",
@@ -277,6 +279,8 @@ export const eventAPI = {
       endTime: string;
       category_id: number;
       duration: string;
+      is_recurring: boolean;
+      recurrence_rule: string;
     }>
   ) => {
     return await fetchAPI(`/api/events/${eventId}`, {

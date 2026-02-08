@@ -51,7 +51,10 @@ class ChatService:
                 "startTime": "HH:MM",
                 "endTime": "HH:MM",
                 "category_name": "string (optional)",
-                "duration": "string (optional e.g., '1h')"
+
+                "duration": "string (optional e.g., '1h')",
+                "is_recurring": "boolean (optional)",
+                "recurrence_rule": "string (optional, RRULE format e.g., 'FREQ=WEEKLY;INTERVAL=1')"
                 
                 // For todo:
                 "title": "string",
@@ -72,6 +75,9 @@ class ChatService:
         Rules:
         - If the user specifies a relative time (tomorrow, next friday), calculate the exact date based on Current Local Time.
         - If time is given without end time, assume 1 hour duration.
+        - If the user specifies a range for recurrence (e.g., 'for 3 months', 'until May'), calculate the UNTIL date based on the Current Local Time and include it in the RRULE (e.g., FREQ=WEEKLY;UNTIL=20231231T000000Z).
+        - If the user specifies a start month for a recurring event (e.g., "Mondays in February, March, and April"), set the "date" field to the first occurrence date within that period.
+        - If the user mentions recurrence (e.g., 'every Monday', 'daily', 'weekly'), set is_recurring to true and generate a valid RRULE string for recurrence_rule.
         - If category is mentioned, try to match with Existing Categories. If it's a new category and the intent is NOT create_category, you can still suggest it or map to Uncategorized.
         - If you cannot understand, set intent to "unknown" and ask for clarification in response_text.
         """
@@ -143,7 +149,10 @@ class ChatService:
                     startTime=entities.get("startTime"),
                     endTime=entities.get("endTime"),
                     category_id=category_id,
-                    duration=entities.get("duration")
+
+                    duration=entities.get("duration"),
+                    is_recurring=entities.get("is_recurring", False),
+                    recurrence_rule=entities.get("recurrence_rule")
                 )
                 EventService.create_event(db, user.id, event_data)
                 return ChatResponse(response=response_text, action_taken="create_event")

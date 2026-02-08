@@ -10,6 +10,8 @@ class EventSchema(BaseModel):
     startTime: str
     endTime: str
     duration: Optional[str]
+    is_recurring: bool = False
+    recurrence_rule: Optional[str] = None
     createdAt: Optional[str]
     class Config:
         from_attributes = True
@@ -21,6 +23,8 @@ class EventCreateSchema(BaseModel):
     endTime: str
     category_id: Optional[int] = None
     duration: Optional[str] = None
+    is_recurring: bool = False
+    recurrence_rule: Optional[str] = None
 
 class EventUpdateSchema(BaseModel):
     title: Optional[str] = None
@@ -29,3 +33,5 @@ class EventUpdateSchema(BaseModel):
     endTime: Optional[str] = None
     category_id: Optional[int] = None
     duration: Optional[str] = None
+    is_recurring: Optional[bool] = None
+    recurrence_rule: Optional[str] = None

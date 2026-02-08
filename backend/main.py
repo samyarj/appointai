@@ -87,6 +87,8 @@ class EventSchema(BaseModel):
     startTime: str
     endTime: str
     duration: Optional[str]
+    is_recurring: bool = False
+    recurrence_rule: Optional[str] = None
     createdAt: Optional[str]
     class Config:
         orm_mode = True
@@ -149,6 +151,8 @@ class EventCreateSchema(BaseModel):
     endTime: str
     category_id: Optional[int] = None
     duration: Optional[str] = None
+    is_recurring: bool = False
+    recurrence_rule: Optional[str] = None
 
 class EventUpdateSchema(BaseModel):
     title: Optional[str] = None
@@ -157,6 +161,8 @@ class EventUpdateSchema(BaseModel):
     endTime: Optional[str] = None
     category_id: Optional[int] = None
     duration: Optional[str] = None
+    is_recurring: Optional[bool] = None
+    recurrence_rule: Optional[str] = None
 
 @app.get("/")
 async def root():
@@ -262,6 +268,8 @@ def get_events(
             startTime=e.start_time.strftime("%H:%M") if e.start_time else None,
             endTime=e.end_time.strftime("%H:%M") if e.end_time else None,
             duration=e.duration,
+            is_recurring=e.is_recurring,
+            recurrence_rule=e.recurrence_rule,
             createdAt=e.created_at.isoformat() if e.created_at else None,
         ) for e in events
     ]
@@ -282,6 +290,8 @@ def create_event(
             end_time=datetime.strptime(event_data.endTime, "%H:%M").time(),
             category_id=event_data.category_id,
             duration=event_data.duration,
+            is_recurring=event_data.is_recurring,
+            recurrence_rule=event_data.recurrence_rule,
             created_at=datetime.utcnow()
         )
         db.add(event)
@@ -297,6 +307,8 @@ def create_event(
             startTime=event.start_time.strftime("%H:%M"),
             endTime=event.end_time.strftime("%H:%M"),
             duration=event.duration,
+            is_recurring=event.is_recurring,
+            recurrence_rule=event.recurrence_rule,
             createdAt=event.created_at.isoformat(),
         )
     except Exception as e:
@@ -333,6 +345,10 @@ def update_event(
             event.category_id = event_data.category_id
         if event_data.duration is not None:
             event.duration = event_data.duration
+        if event_data.is_recurring is not None:
+            event.is_recurring = event_data.is_recurring
+        if event_data.recurrence_rule is not None:
+            event.recurrence_rule = event_data.recurrence_rule
             
         db.commit()
         db.refresh(event)
@@ -346,6 +362,8 @@ def update_event(
             startTime=event.start_time.strftime("%H:%M"),
             endTime=event.end_time.strftime("%H:%M"),
             duration=event.duration,
+            is_recurring=event.is_recurring,
+            recurrence_rule=event.recurrence_rule,
             createdAt=event.created_at.isoformat() if event.created_at else None,
         )
     except HTTPException:

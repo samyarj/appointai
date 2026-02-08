@@ -56,9 +56,13 @@ class Event(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     duration = Column(String(20))
+    is_recurring = Column(Boolean, default=False)
+    recurrence_rule = Column(String(255), nullable=True)  # RRULE format (e.g., FREQ=WEEKLY;INTERVAL=1)
     created_at = Column(TIMESTAMP)
     user = relationship('User', back_populates='events')
     category = relationship('Category', back_populates='events')
+    is_recurring = Column(Boolean, default=False)
+    recurrence_rule = Column(String(255))  # RRULE format (e.g., FREQ=WEEKLY;INTERVAL=1)
 
 class Todo(Base):
     __tablename__ = 'todos'

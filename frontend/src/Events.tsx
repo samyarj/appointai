@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { eventAPI, categoryAPI } from "./api";
+import { RRule, rrulestr } from "rrule";
 
 type Event = {
   id: number;
@@ -10,7 +11,10 @@ type Event = {
   startTime: string;
   endTime: string;
   duration?: string;
+  is_recurring?: boolean;
+  recurrence_rule?: string;
   createdAt?: string;
+  original_event_id?: number; // Helper for frontend-generated instances
 };
 
 interface Category {
@@ -36,7 +40,11 @@ const Events: React.FC = () => {
     endTime: "",
     duration: "",
     category_id: undefined,
+    is_recurring: false,
+    recurrence_rule: "",
   });
+  const [recurrenceType, setRecurrenceType] = useState<"NONE" | "DAILY" | "WEEKLY" | "MONTHLY">("NONE");
+  const [recurrenceEnd, setRecurrenceEnd] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<{
@@ -68,12 +76,65 @@ const Events: React.FC = () => {
     setError(null);
     try {
       const data = await eventAPI.getEvents();
-      setEvents(data);
+      // Expand recurring events here for the view
+      const expandedEvents = expandRecurringEvents(data);
+      setEvents(expandedEvents);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load events");
     } finally {
       setLoading(false);
     }
+  };
+
+  const expandRecurringEvents = (rawEvents: Event[]): Event[] => {
+    const expanded: Event[] = [];
+    const now = new Date();
+    // Look ahead 1 year for recurrence expansion by default
+    const limitDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+    rawEvents.forEach(event => {
+      // Always add the original event (or its base instance)
+      expanded.push(event);
+
+      if (event.is_recurring && event.recurrence_rule) {
+        try {
+          const ruleOptions = RRule.parseString(event.recurrence_rule);
+          
+          // Ensure DTSTART is set to event date for correct calculations
+          // Note: rrule doesn't handle timezones perfectly with strings, working with local dates here
+          const [year, month, day] = event.date.split("-").map(Number);
+          ruleOptions.dtstart = new Date(year, month - 1, day);
+          
+          const rule = new RRule(ruleOptions);
+          // Use dtstart to include all occurrences
+          const occurrences = rule.between(ruleOptions.dtstart, limitDate, true); 
+          
+          // Skip the first one if it matches the original event date (to avoid duplicates, though set logic might be better)
+          // Actually, we should probably treat the "event" object as the definition, 
+          // and if we want to show instances, we might just use the instances.
+          // But for now, let's keep the original and add *additional* instances.
+          
+          occurrences.forEach((date, index) => {
+             // format YYYY-MM-DD
+             const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time usually
+             
+             if (dateStr === event.date) return; // Skip original date
+
+             expanded.push({
+               ...event,
+               id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
+               original_event_id: event.id,
+               date: dateStr,
+               // Make instances distinct looking if needed, or treated same
+             });
+          });
+
+        } catch (err) {
+          console.error("Failed to parse recurrence rule", err, event);
+        }
+      }
+    });
+    return expanded;
   };
 
   const loadCategories = async () => {
@@ -152,6 +213,22 @@ const Events: React.FC = () => {
         newEvent.startTime!,
         newEvent.endTime!
       );
+      
+      let rrule = undefined;
+      if (recurrenceType !== "NONE") {
+         let parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
+         if (recurrenceEnd) {
+           // Format date to YYYYMMDD for RRULE UNTIL
+           const endDate = new Date(recurrenceEnd);
+           const yyyy = endDate.getFullYear();
+           const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+           const dd = String(endDate.getDate()).padStart(2, '0');
+           // UNTIL expects UTC usually or floating. Let's use floating date format for now T235959
+           parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
+         }
+         rrule = parts.join(";");
+      }
+
       const eventData = {
         title: newEvent.title.trim(),
         date: newEvent.date,
@@ -159,10 +236,14 @@ const Events: React.FC = () => {
         endTime: newEvent.endTime,
         duration: duration,
         category_id: newEvent.category_id,
+        is_recurring: recurrenceType !== "NONE",
+        recurrence_rule: rrule,
       };
 
-      const createdEvent = await eventAPI.createEvent(eventData);
-      setEvents([...events, createdEvent]);
+      await eventAPI.createEvent(eventData);
+      // Reload all events to get authoritative list (simplified)
+      await loadEvents();
+      
       setNewEvent({
         title: "",
         date: "",
@@ -170,7 +251,11 @@ const Events: React.FC = () => {
         endTime: "",
         duration: "",
         category_id: undefined,
+        is_recurring: false,
+        recurrence_rule: "",
       });
+      setRecurrenceType("NONE");
+      setRecurrenceEnd("");
       setShowAddForm(false);
       showStatus("success", "Event created successfully!");
     } catch (e) {
@@ -181,6 +266,15 @@ const Events: React.FC = () => {
   };
 
   const handleEditEvent = (event: Event) => {
+    if (event.original_event_id) {
+        // If it's a generated instance, we should probably edit the original
+        // For now, let's just warn or handle it simply finding the original
+        alert("Editing a single instance of a recurring event is not fully supported yet. Please edit the original event.");
+        const original = events.find(e => e.id === event.original_event_id);
+        if (original) event = original;
+        else return; 
+    }
+
     setEditingEvent(event);
     setNewEvent({
       title: event.title,
@@ -189,7 +283,30 @@ const Events: React.FC = () => {
       endTime: event.endTime,
       duration: event.duration,
       category_id: event.category_id,
+      is_recurring: event.is_recurring,
+      recurrence_rule: event.recurrence_rule,
     });
+    
+    // Parse recurrence rule to set type and end date
+    setRecurrenceType("NONE");
+    setRecurrenceEnd("");
+    
+    if (event.is_recurring && event.recurrence_rule) {
+      const rule = event.recurrence_rule;
+      if (rule.includes("FREQ=DAILY")) setRecurrenceType("DAILY");
+      else if (rule.includes("FREQ=WEEKLY")) setRecurrenceType("WEEKLY");
+      else if (rule.includes("FREQ=MONTHLY")) setRecurrenceType("MONTHLY");
+      
+      // Parse UNTIL if present
+      const match = rule.match(/UNTIL=(\d{8})/);
+      if (match) {
+        const dateStr = match[1];
+        const yyyy = dateStr.substring(0, 4);
+        const mm = dateStr.substring(4, 6);
+        const dd = dateStr.substring(6, 8);
+        setRecurrenceEnd(`${yyyy}-${mm}-${dd}`);
+      }
+    }
     setShowAddForm(true);
   };
 
@@ -210,6 +327,20 @@ const Events: React.FC = () => {
         newEvent.startTime!,
         newEvent.endTime!
       );
+      
+      let rrule = undefined;
+      if (recurrenceType !== "NONE") {
+         let parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
+         if (recurrenceEnd) {
+           const endDate = new Date(recurrenceEnd);
+           const yyyy = endDate.getFullYear();
+           const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+           const dd = String(endDate.getDate()).padStart(2, '0');
+           parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
+         }
+         rrule = parts.join(";");
+      }
+
       const eventData = {
         title: newEvent.title.trim(),
         date: newEvent.date,
@@ -217,17 +348,17 @@ const Events: React.FC = () => {
         endTime: newEvent.endTime,
         duration: duration,
         category_id: newEvent.category_id,
+        is_recurring: recurrenceType !== "NONE",
+        recurrence_rule: rrule,
       };
 
-      const updatedEvent = await eventAPI.updateEvent(
+      await eventAPI.updateEvent(
         editingEvent.id,
         eventData
       );
-      setEvents(
-        events.map(event =>
-          event.id === editingEvent.id ? updatedEvent : event
-        )
-      );
+      
+      await loadEvents();
+      
       setEditingEvent(null);
       setNewEvent({
         title: "",
@@ -236,7 +367,11 @@ const Events: React.FC = () => {
         endTime: "",
         duration: "",
         category_id: undefined,
+        is_recurring: false,
+        recurrence_rule: "",
       });
+      setRecurrenceType("NONE");
+      setRecurrenceEnd("");
       setShowAddForm(false);
       showStatus("success", "Event updated successfully!");
     } catch (e) {
@@ -247,18 +382,29 @@ const Events: React.FC = () => {
   };
 
   const handleDeleteEvent = async (id: number) => {
+    // If it's an instance, delete the original (for now)
     const event = events.find(e => e.id === id);
-    const eventName = event ? event.title : "this event";
+    if (!event) return;
+    
+    // Check if it's a frontend instance
+    const targetId = event.original_event_id || event.id;
+    const isInstance = !!event.original_event_id;
+    
+    const eventName = event.title;
+    const message = isInstance 
+       ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
+       : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
     showConfirmDialog(
       "Delete Event",
-      `Are you sure you want to delete "${eventName}"? This action cannot be undone.`,
+      message,
       async () => {
         setActionStatus({ type: "loading", message: "Deleting event..." });
 
         try {
-          await eventAPI.deleteEvent(id);
-          setEvents(events.filter(event => event.id !== id));
+          await eventAPI.deleteEvent(targetId);
+          // Reload to refresh list
+          await loadEvents();
           showStatus("success", "Event deleted successfully!");
         } catch (e) {
           const errorMessage =
@@ -273,16 +419,16 @@ const Events: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let filtered = events;
+    let filtered = [...events]; // Create copy
 
     // Apply filter
     if (filterBy === "upcoming") {
-      filtered = events.filter(event => {
+      filtered = filtered.filter(event => {
         const eventDate = new Date(event.date + "T00:00:00");
         return eventDate >= today;
       });
     } else if (filterBy === "past") {
-      filtered = events.filter(event => {
+      filtered = filtered.filter(event => {
         const eventDate = new Date(event.date + "T00:00:00");
         return eventDate < today;
       });
@@ -571,6 +717,33 @@ const Events: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Recurrence
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={recurrenceType}
+                          onChange={e => setRecurrenceType(e.target.value as any)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="NONE">Does not repeat</option>
+                          <option value="DAILY">Daily</option>
+                          <option value="WEEKLY">Weekly</option>
+                          <option value="MONTHLY">Monthly</option>
+                        </select>
+                        {recurrenceType !== "NONE" && (
+                          <input 
+                            type="date"
+                            placeholder="Until (optional)"
+                            value={recurrenceEnd}
+                            onChange={e => setRecurrenceEnd(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
+                            title="Recurrence end date (optional)"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Start Time *
                       </label>
                       <input
@@ -619,7 +792,11 @@ const Events: React.FC = () => {
                           endTime: "",
                           duration: "",
                           category_id: undefined,
+                          is_recurring: false,
+                          recurrence_rule: "",
                         });
+                        setRecurrenceType("NONE");
+                        setRecurrenceEnd("");
                       }}
                         className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
                       >
@@ -658,13 +835,13 @@ const Events: React.FC = () => {
                                 className="w-4 h-4 rounded-full"
                                 style={{ backgroundColor: categoryColor }}
                               ></div>
-                                <h3
-                                  className={`font-semibold text-xl ${
-                                    isPast ? "text-gray-600 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
-                                  }`}
-                                >
-                                  {event.title}
-                                </h3>
+                              <h3
+                                className={`font-semibold text-xl ${
+                                  isPast ? "text-gray-600 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
+                                }`}
+                              >
+                                {event.title}
+                              </h3>
                               {isToday && (
                                 <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-medium">
                                   Today
@@ -676,11 +853,12 @@ const Events: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                              <div
-                                className={`space-y-2 text-sm ${
-                                  isPast ? "text-gray-500 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"
-                                }`}
-                              >
+
+                            <div
+                              className={`space-y-2 text-sm ${
+                                isPast ? "text-gray-500 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"
+                              }`}
+                            >
                               <div className="flex items-center gap-2">
                                 <span>📅</span>
                                 <span className="font-medium">
@@ -692,6 +870,7 @@ const Events: React.FC = () => {
                                   })}
                                 </span>
                               </div>
+
                               <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
                                   <span>🕐</span>
@@ -699,21 +878,41 @@ const Events: React.FC = () => {
                                     {event.startTime} - {event.endTime}
                                   </span>
                                 </div>
+
                                 {event.duration && (
                                   <div className="flex items-center gap-2">
                                     <span>⏱️</span>
                                     <span>{event.duration}</span>
                                   </div>
                                 )}
+
                                 <div className="flex items-center gap-2">
                                   <span>🏷️</span>
                                   <span>
                                     {getCategoryName(event.category_id)}
                                   </span>
                                 </div>
+
+                                {event.is_recurring && !event.original_event_id && (
+                                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400" title={`Recurs: ${event.recurrence_rule}`}>
+                                    <span>🔁</span>
+                                    <span className="text-xs">
+                                      {event.recurrence_rule?.includes("DAILY") ? "Daily" : 
+                                       event.recurrence_rule?.includes("WEEKLY") ? "Weekly" : 
+                                       event.recurrence_rule?.includes("MONTHLY") ? "Monthly" : "Recurring"}
+                                    </span>
+                                  </div>
+                                )}
+                                {event.original_event_id && (
+                                  <div className="flex items-center gap-2 text-gray-400" title="Instance of recurring event">
+                                     <span>↪️</span>
+                                     <span className="text-xs">Recursive Instance</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
+                          
                           <div className="flex space-x-2 ml-4">
                             <button
                               onClick={() => handleEditEvent(event)}

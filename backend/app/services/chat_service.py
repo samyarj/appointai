@@ -40,34 +40,43 @@ class ChatService:
         1. create_event
         2. create_todo
         3. create_category
+        4. update_event
+        5. delete_event
         
         Output strictly valid JSON with the following structure:
         {{
-            "intent": "create_event" | "create_todo" | "create_category" | "unknown",
+            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "unknown",
             "entities": {{
-                // For event:
+                // For create_event/update_event:
                 "title": "string",
                 "date": "YYYY-MM-DD",
                 "startTime": "HH:MM",
                 "endTime": "HH:MM",
                 "category_name": "string (optional)",
-
                 "duration": "string (optional e.g., '1h')",
                 "is_recurring": "boolean (optional)",
-                "recurrence_rule": "string (optional, RRULE format e.g., 'FREQ=WEEKLY;INTERVAL=1')"
+                "recurrence_rule": "string (optional)"
                 
-                // For todo:
+                // For create_todo:
                 "title": "string",
                 "description": "string",
                 "priority": "low" | "medium" | "high",
-                "due_date": "YYYY-MM-DD (optional)",
-                "estimated_duration": "string (optional)",
-                "category_name": "string (optional)"
-
-                // For category:
+                "due_date": "YYYY-MM-DD (optional)"
+                
+                 // For category:
                 "name": "string",
-                "color": "hex string (optional, generate a nice one if missing)",
-                "description": "string (optional)"
+                "color": "hex string",
+                "description": "string"
+            }},
+            // For update_event or delete_event, provide search_criteria to find the event:
+            "search_criteria": {{
+                "title_keyword": "string (part of title to match, e.g. 'gym')",
+                "date": "YYYY-MM-DD (optional, if specified)"
+            }},
+            // For update_event, allow explicit updates object (optional, defaults to entities):
+            "updates": {{
+                 "startTime": "HH:MM" 
+                 // etc.
             }},
             "response_text": "A natural language confirmation message to show the user."
         }}
@@ -75,11 +84,11 @@ class ChatService:
         Rules:
         - If the user specifies a relative time (tomorrow, next friday), calculate the exact date based on Current Local Time.
         - If time is given without end time, assume 1 hour duration.
-        - If the user specifies a range for recurrence (e.g., 'for 3 months', 'until May'), calculate the UNTIL date based on the Current Local Time and include it in the RRULE (e.g., FREQ=WEEKLY;UNTIL=20231231T000000Z).
-        - If the user specifies a start month for a recurring event (e.g., "Mondays in February, March, and April"), set the "date" field to the first occurrence date within that period.
-        - If the user mentions recurrence (e.g., 'every Monday', 'daily', 'weekly'), set is_recurring to true and generate a valid RRULE string for recurrence_rule.
-        - If category is mentioned, try to match with Existing Categories. If it's a new category and the intent is NOT create_category, you can still suggest it or map to Uncategorized.
-        - If you cannot understand, set intent to "unknown" and ask for clarification in response_text.
+        - If the user specifies a range for recurrence (e.g., 'for 3 months', 'until May'), calculate the UNTIL date based on the Current Local Time and include it in the RRULE.
+        - If the user specifies a start month for a recurring event, set the "date" field accordingly.
+        - If intent is "update_event" or "delete_event", you MUST provide "search_criteria" derived from the user's request (e.g., "delete my gym class" -> keyword: "gym").
+        - If category is mentioned, try to match with Existing Categories.
+        - If you cannot understand, set intent to "unknown".
         """
         
         try:
@@ -168,7 +177,65 @@ class ChatService:
                 )
                 TodoService.create_todo(db, user.id, todo_data)
                 return ChatResponse(response=response_text, action_taken="create_todo")
+            
+            elif intent in ["update_event", "delete_event"]:
+                # Logic to find event
+                # This requires fetching user events and finding the best match
+                user_events = EventService.get_events_by_user(db, user.id)
+                search_criteria = parsed.get("search_criteria", {})
+                title_query = search_criteria.get("title_keyword", "").lower()
+                date_query = search_criteria.get("date")
                 
+                matched_event = None
+                
+                # Simple filtering logic
+                candidates = []
+                for e in user_events:
+                    if title_query and title_query in e.title.lower():
+                        candidates.append(e)
+                
+                # If date provided, filter further
+                if date_query and candidates:
+                    candidates = [c for c in candidates if str(c.date) == date_query]
+                
+                # If no date provided but multiple candidates, maybe pick the next upcoming one?
+                # For now, let's pick the first match or fail if ambiguous
+                if len(candidates) == 1:
+                    matched_event = candidates[0]
+                elif len(candidates) > 1:
+                    # Heuristic: Pick the one closest to now (upcoming usually)
+                    # Or just pick the first one
+                    matched_event = candidates[0]
+                elif not candidates and not date_query and title_query:
+                     # Try finding exact match?
+                     pass
+                     
+                if not matched_event:
+                    return ChatResponse(
+                        response=f"I couldn't find an event matching '{title_query}'" + (f" on {date_query}" if date_query else "") + ". Please be more specific."
+                    )
+                
+                if intent == "delete_event":
+                    EventService.delete_event(db, user.id, matched_event.id)
+                    return ChatResponse(response=response_text, action_taken="delete_event")
+                
+                elif intent == "update_event":
+                    updates = parsed.get("updates", {}) or entities # Support both formats
+                    from app.schemas.event import EventUpdateSchema
+                    
+                    update_data = EventUpdateSchema(
+                        title=updates.get("title"),
+                        date=updates.get("date"),
+                        startTime=updates.get("startTime"),
+                        endTime=updates.get("endTime"),
+                        category_id=category_id, # If explicitly updating category
+                        duration=updates.get("duration"),
+                        is_recurring=updates.get("is_recurring"),
+                        recurrence_rule=updates.get("recurrence_rule")
+                    )
+                    EventService.update_event(db, user.id, matched_event.id, update_data)
+                    return ChatResponse(response=response_text, action_taken="update_event")
+
             else:
                 return ChatResponse(response=response_text)
                 

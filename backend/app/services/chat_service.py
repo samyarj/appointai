@@ -42,10 +42,11 @@ class ChatService:
         3. create_category
         4. update_event
         5. delete_event
+        6. query_calendar
         
         Output strictly valid JSON with the following structure:
         {{
-            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "unknown",
+            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "query_calendar" | "unknown",
             "entities": {{
                 // For create_event/update_event:
                 "title": "string",
@@ -55,7 +56,10 @@ class ChatService:
                 "category_name": "string (optional)",
                 "duration": "string (optional e.g., '1h')",
                 "is_recurring": "boolean (optional)",
-                "recurrence_rule": "string (optional)"
+                "recurrence_rule": "string (optional)",
+                "auto_schedule": "boolean (true if user asks to 'find a time' or 'sometime next week' without specific time)",
+                "time_range_start": "YYYY-MM-DD (start of search range for auto_schedule)",
+                "time_range_end": "YYYY-MM-DD (end of search range for auto_schedule)"
                 
                 // For create_todo:
                 "title": "string",
@@ -67,6 +71,10 @@ class ChatService:
                 "name": "string",
                 "color": "hex string",
                 "description": "string"
+
+                 // For query_calendar:
+                "date_range_start": "YYYY-MM-DD",
+                "date_range_end": "YYYY-MM-DD"
             }},
             // For update_event or delete_event, provide search_criteria to find the event:
             "search_criteria": {{
@@ -78,7 +86,7 @@ class ChatService:
                  "startTime": "HH:MM" 
                  // etc.
             }},
-            "response_text": "A natural language confirmation message to show the user."
+            "response_text": "A natural language confirmation message to show the user. If auto-scheduling, say 'I found a slot at...'"
         }}
         
         Rules:
@@ -87,6 +95,8 @@ class ChatService:
         - If the user specifies a range for recurrence (e.g., 'for 3 months', 'until May'), calculate the UNTIL date based on the Current Local Time and include it in the RRULE.
         - If the user specifies a start month for a recurring event, set the "date" field accordingly.
         - If intent is "update_event" or "delete_event", you MUST provide "search_criteria" derived from the user's request (e.g., "delete my gym class" -> keyword: "gym").
+        - If intent is "query_calendar", derive the date range from the user's request (e.g., "this week" -> start=today, end=end of week).
+        - If the user says "sometime next week" or "find a time", set "auto_schedule": true, and set "time_range_start" and "time_range_end" to the requested period.
         - If category is mentioned, try to match with Existing Categories.
         - If you cannot understand, set intent to "unknown".
         """
@@ -152,6 +162,27 @@ class ChatService:
                     category_id = found_cat.id
             
             if intent == "create_event":
+                # Check for auto-schedule
+                if entities.get("auto_schedule"):
+                    # Find slot
+                    search_start = entities.get("time_range_start") or entities.get("date")
+                    duration = entities.get("duration", "1h")
+                    
+                    if not search_start:
+                         from datetime import date
+                         search_start = date.today().isoformat()
+
+                    slot = ChatService.find_available_slot(db, user.id, search_start, duration)
+                    if not slot:
+                        return ChatResponse(response=f"I couldn't find any free time starting from {search_start} for {duration}.")
+                    
+                    # Update entities with found slot
+                    entities["date"] = slot["date"]
+                    entities["startTime"] = slot["startTime"]
+                    entities["endTime"] = slot["endTime"]
+                    
+                    response_text += f" I scheduled it for {slot['date']} from {slot['startTime']} to {slot['endTime']}."
+
                 event_data = EventCreateSchema(
                     title=entities.get("title"),
                     date=entities.get("date"),
@@ -235,6 +266,38 @@ class ChatService:
                     )
                     EventService.update_event(db, user.id, matched_event.id, update_data)
                     return ChatResponse(response=response_text, action_taken="update_event")
+            
+            elif intent == "query_calendar":
+                from datetime import datetime, date
+                # Fetch events and return summary
+                entities = parsed.get("entities", {})
+                start_date_str = entities.get("date_range_start") or entities.get("date")
+                end_date_str = entities.get("date_range_end")
+                
+                # Default to today if no date
+                if not start_date_str:
+                    start_date_str = date.today().isoformat()
+                if not end_date_str:
+                    end_date_str = start_date_str
+                
+                user_events = EventService.get_events_by_user(db, user.id)
+                
+                # Filter locally for simplicity (or update service to filter)
+                relevant_events = []
+                for e in user_events:
+                    # Simple string comparison works for ISO dates YYYY-MM-DD
+                    if start_date_str <= str(e.date) <= end_date_str:
+                        relevant_events.append(e)
+                
+                if not relevant_events:
+                    summary = f"You have no events scheduled between {start_date_str} and {end_date_str}."
+                else:
+                    lines = [f"Here is your schedule from {start_date_str} to {end_date_str}:"]
+                    for e in sorted(relevant_events, key=lambda x: (x.date, x.start_time)):
+                        lines.append(f"- {e.date} {e.start_time.strftime('%H:%M')} - {e.title}")
+                    summary = "\n".join(lines)
+                
+                return ChatResponse(response=summary)
 
             else:
                 return ChatResponse(response=response_text)
@@ -245,3 +308,82 @@ class ChatService:
                 response=f"Sorry, I ran into an issue filtering your request: {str(e)}",
                 action_taken="error"
             )
+
+    @staticmethod
+    def find_available_slot(db: Session, user_id: int, start_date_str: str, duration_str: str = "1h", range_days: int = 7) -> Optional[dict]:
+        from datetime import datetime, timedelta, time, date
+
+        # Parse duration
+        duration_minutes = 60 # Default
+        if duration_str:
+            if 'h' in duration_str:
+                try:
+                    duration_minutes = int(float(duration_str.replace('h', '')) * 60)
+                except:
+                   pass
+            elif 'm' in duration_str:
+                try:
+                     duration_minutes = int(duration_str.replace('m', ''))
+                except:
+                    pass
+        
+        start_date = date.fromisoformat(start_date_str)
+        user_events = EventService.get_events_by_user(db, user_id)
+        
+        # Simple heuristic: Check 9am - 5pm for next 7 days
+        work_start = time(9, 0)
+        work_end = time(17, 0)
+        
+        for i in range(range_days):
+            check_date = start_date + timedelta(days=i)
+            day_events = [e for e in user_events if e.date == check_date]
+            day_events.sort(key=lambda x: x.start_time)
+            
+            # Create a list of busy slots for the day
+            busy_slots = []
+            for e in day_events:
+                start_dt = datetime.combine(check_date, e.start_time)
+                # Parse end time properly or assume duration
+                if e.end_time:
+                     end_dt = datetime.combine(check_date, e.end_time)
+                else:
+                     end_dt = start_dt + timedelta(hours=1)
+                busy_slots.append((start_dt, end_dt))
+            
+            # Check for free slot starting from work_start
+            current_slot_start = datetime.combine(check_date, work_start)
+            day_end_limit = datetime.combine(check_date, work_end)
+            
+            # Check availability against busy slots
+            while current_slot_start + timedelta(minutes=duration_minutes) <= day_end_limit:
+                 slot_end = current_slot_start + timedelta(minutes=duration_minutes)
+                 is_busy = False
+                 for b_start, b_end in busy_slots:
+                     # Overlap check
+                     # (StartA < EndB) and (EndA > StartB)
+                     if current_slot_start < b_end and slot_end > b_start:
+                         is_busy = True
+                         # Jump to end of this busy slot to optimize
+                         current_slot_start = b_end
+                         break
+                 
+                 if not is_busy:
+                     return {
+                         "date": check_date.isoformat(),
+                         "startTime": current_slot_start.strftime("%H:%M"),
+                         "endTime": slot_end.strftime("%H:%M")
+                     }
+                 
+                 # If we didn't jump, increment by 15 mins
+                 if not is_busy: # Should have returned, but safety
+                     pass 
+                 else:
+                     # Optimization: we already jumped current_slot_start to b_end
+                     pass
+                     
+                 if is_busy:
+                      pass # continue outer while
+                 else:
+                      pass # logic redundancy, unreachable
+        
+        return None

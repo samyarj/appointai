@@ -87,13 +87,13 @@ const Calendar: React.FC = () => {
     isOpen: boolean;
     title: string;
     message: string;
-    onConfirm: () => void;
+    onConfirm?: () => void;
     onCancel: () => void;
+    buttons?: { label: string; action: () => void; className: string }[];
   }>({
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => {},
     onCancel: () => {},
   });
 
@@ -117,7 +117,14 @@ const Calendar: React.FC = () => {
 
       if (event.is_recurring && event.recurrence_rule) {
         try {
-          const ruleOptions = RRule.parseString(event.recurrence_rule);
+          const parts = event.recurrence_rule.split("|");
+          const ruleOptions = RRule.parseString(parts[0]);
+          const exdatesStr = parts[1] || "";
+          let exdates: string[] = [];
+          
+          if (exdatesStr.startsWith("EXDATE=")) {
+            exdates = exdatesStr.substring(7).split(",");
+          }
 
           // Ensure DTSTART is set to event date for correct calculations
           const [year, month, day] = event.date.split("-").map(Number);
@@ -139,6 +146,7 @@ const Calendar: React.FC = () => {
             const dateStr = `${year}-${month}-${day}`;
 
             if (dateStr === event.date) return; // Skip original date
+            if (exdates.includes(dateStr)) return; // Skip deleted instances
 
             expanded.push({
               ...event,
@@ -194,6 +202,24 @@ const Calendar: React.FC = () => {
       onCancel: () => {
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       },
+      buttons: undefined,
+    });
+  };
+
+  // Helper for multi-option dialog
+  const showOptionsDialog = (
+    title: string,
+    message: string,
+    buttons: { label: string; action: () => void; className: string }[]
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onCancel: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+      buttons,
     });
   };
 
@@ -466,19 +492,62 @@ const Calendar: React.FC = () => {
     const targetId = event.original_event_id || event.id;
     const eventName = event.title;
 
-    const message = isInstance
-      ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
-      : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
-
-    showConfirmDialog("Delete Event", message, async () => {
+    const execDeleteAll = async () => {
       try {
         await eventAPI.deleteEvent(targetId);
-        // Reload data to correctly refresh expanded events
         await loadData();
       } catch (err: any) {
         setError(err.message);
       }
-    });
+    };
+
+    const execDeleteSingle = async () => {
+      const originalEvent = isInstance ? events.find(e => e.id === targetId) : event;
+      if (!originalEvent) return;
+      try {
+        const parts = (originalEvent.recurrence_rule || "").split('|');
+        let rrulePart = parts[0];
+        let exdatesPart = parts[1] || "EXDATE=";
+        
+        if (exdatesPart === "EXDATE=") {
+          exdatesPart += event.date;
+        } else {
+          if (!exdatesPart.includes(event.date)) {
+            exdatesPart += "," + event.date;
+          }
+        }
+        const newRule = `${rrulePart}|${exdatesPart}`;
+        await eventAPI.updateEvent(targetId, { recurrence_rule: newRule });
+        await loadData();
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    if (isInstance || event.is_recurring) {
+      showOptionsDialog(
+        "Delete Recurring Event",
+        `"${eventName}" is part of a recurring series. How would you like to delete?`,
+        [
+          {
+            label: "Delete this event only",
+            action: execDeleteSingle,
+            className: "w-full py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+          },
+          {
+            label: "Delete all events in series",
+            action: execDeleteAll,
+            className: "w-full py-2.5 bg-red-500 text-white hover:bg-red-600 rounded-lg font-medium transition-colors shadow-sm"
+          }
+        ]
+      );
+    } else {
+      showConfirmDialog(
+        "Delete Event",
+        `Are you sure you want to delete "${eventName}"? This action cannot be undone.`,
+        execDeleteAll
+      );
+    }
   };
 
   const handleSaveEvent = async (eventData: Omit<Event, "id">) => {
@@ -1735,20 +1804,45 @@ const Calendar: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               {confirmDialog.message}
             </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Delete
-              </button>
-            </div>
+            {confirmDialog.buttons ? (
+              <div className="flex flex-col gap-3 mt-2">
+                {confirmDialog.buttons.map((btn, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      btn.action();
+                      setConfirmDialog(p => ({ ...p, isOpen: false }));
+                    }}
+                    className={btn.className}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+                <button
+                  onClick={confirmDialog.onCancel}
+                  className="mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors underline"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={confirmDialog.onCancel}
+                  className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
+                >
+                  Cancel
+                </button>
+                {confirmDialog.onConfirm && (
+                  <button
+                    onClick={confirmDialog.onConfirm}
+                    className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Confirm
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -31,10 +31,23 @@ class ChatService:
         categories = db.query(Category).all()
         category_names = [c.name for c in categories]
         
+        # Fetch upcoming events to provide schedule context
+        from datetime import date
+        try:
+            today_str = date.today().isoformat()
+            user_events_raw = EventService.get_events_by_user(db, user.id)
+            upcoming = [e for e in user_events_raw if str(e.date) >= today_str]
+            upcoming.sort(key=lambda x: (x.date, x.start_time))
+            events_context = "\n".join([f"- {e.date} {e.start_time.strftime('%H:%M')}-{e.end_time.strftime('%H:%M') if e.end_time else '1h'} : {e.title}" for e in upcoming[:20]]) or "No upcoming events."
+        except Exception:
+            events_context = "No upcoming events."
+        
         system_prompt = f"""
         You are an intelligent scheduling assistant for an app called AppointAI.
         Current Local Time: {request.local_time}
         Existing Categories: {", ".join(category_names)}
+        User's Upcoming Events (use this to check for conflicts when scheduling):
+        {events_context}
         
         Your goal is to extract the user's intent and entities to perform one of the following actions:
         1. create_event
@@ -51,8 +64,8 @@ class ChatService:
                 // For create_event/update_event:
                 "title": "string",
                 "date": "YYYY-MM-DD",
-                "startTime": "HH:MM",
-                "endTime": "HH:MM",
+                "startTime": "HH:MM (required string, suggest a free time like '09:00' if not specified)",
+                "endTime": "HH:MM (required string, suggest a time like '10:00' if not specified)",
                 "category_name": "string (optional)",
                 "duration": "string (optional e.g., '1h')",
                 "is_recurring": "boolean (optional)",
@@ -183,11 +196,26 @@ class ChatService:
                     
                     response_text += f" I scheduled it for {slot['date']} from {slot['startTime']} to {slot['endTime']}."
 
+                # Ensure mandatory string fields are present to avoid pydantic validation errors
+                start_time = entities.get("startTime")
+                if not start_time:
+                    start_time = "09:00"
+                end_time = entities.get("endTime")
+                if not end_time:
+                    end_time = "10:00"
+                date_str = entities.get("date")
+                if not date_str:
+                    from datetime import date as dt_date
+                    date_str = dt_date.today().isoformat()
+                title_str = entities.get("title")
+                if not title_str:
+                    title_str = "Scheduled Event"
+
                 event_data = EventCreateSchema(
-                    title=entities.get("title"),
-                    date=entities.get("date"),
-                    startTime=entities.get("startTime"),
-                    endTime=entities.get("endTime"),
+                    title=title_str,
+                    date=date_str,
+                    startTime=start_time,
+                    endTime=end_time,
                     category_id=category_id,
 
                     duration=entities.get("duration"),

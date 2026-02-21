@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { eventAPI, todoAPI, categoryAPI } from "./api";
+import { useRefresh } from "./contexts/RefreshContext";
 import { RRule } from "rrule";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -64,6 +65,7 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const Calendar: React.FC = () => {
+  const { refreshKey } = useRefresh();
   const today = new Date();
   const [view, setView] = useState<ViewMode>("month");
   const [current, setCurrent] = useState({
@@ -95,50 +97,56 @@ const Calendar: React.FC = () => {
     onCancel: () => {},
   });
 
-  // Load data on component mount
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshKey]);
 
   const expandRecurringEvents = (rawEvents: Event[]): Event[] => {
     const expanded: Event[] = [];
     const now = new Date();
     // Look ahead 1 year for recurrence expansion by default
-    const limitDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+    const limitDate = new Date(
+      now.getFullYear() + 1,
+      now.getMonth(),
+      now.getDate()
+    );
 
     rawEvents.forEach(event => {
-      // Always add the original event 
+      // Always add the original event
       expanded.push(event);
 
       if (event.is_recurring && event.recurrence_rule) {
         try {
           const ruleOptions = RRule.parseString(event.recurrence_rule);
-          
+
           // Ensure DTSTART is set to event date for correct calculations
           const [year, month, day] = event.date.split("-").map(Number);
           ruleOptions.dtstart = new Date(year, month - 1, day);
-          
+
           const rule = new RRule(ruleOptions);
           // Use dtstart as start to include all occurrences, not just future ones
-          const occurrences = rule.between(ruleOptions.dtstart, limitDate, true); 
-          
+          const occurrences = rule.between(
+            ruleOptions.dtstart,
+            limitDate,
+            true
+          );
+
           occurrences.forEach((date, index) => {
-             // format YYYY-MM-DD
-             const year = date.getFullYear();
-             const month = String(date.getMonth() + 1).padStart(2, '0');
-             const day = String(date.getDate()).padStart(2, '0');
-             const dateStr = `${year}-${month}-${day}`;
-             
-             if (dateStr === event.date) return; // Skip original date
+            // format YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const dateStr = `${year}-${month}-${day}`;
 
-             expanded.push({
-               ...event,
-               id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
-               original_event_id: event.id,
-               date: dateStr,
-             });
+            if (dateStr === event.date) return; // Skip original date
+
+            expanded.push({
+              ...event,
+              id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
+              original_event_id: event.id,
+              date: dateStr,
+            });
           });
-
         } catch (err) {
           console.error("Failed to parse recurrence rule", err, event);
         }
@@ -155,10 +163,10 @@ const Calendar: React.FC = () => {
         todoAPI.getTodos(),
         categoryAPI.getCategories(),
       ]);
-      
+
       const expandedEvents = expandRecurringEvents(eventsData);
       setEvents(expandedEvents);
-      
+
       setTodos(todosData);
       setCategories(categoriesData);
       setError(null);
@@ -457,38 +465,33 @@ const Calendar: React.FC = () => {
     const isInstance = !!event.original_event_id;
     const targetId = event.original_event_id || event.id;
     const eventName = event.title;
-    
-    const message = isInstance 
-       ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
-       : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
-    showConfirmDialog(
-      "Delete Event",
-      message,
-      async () => {
-        try {
-          await eventAPI.deleteEvent(targetId);
-          // Reload data to correctly refresh expanded events
-          await loadData(); 
-        } catch (err: any) {
-          setError(err.message);
-        }
+    const message = isInstance
+      ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
+      : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
+
+    showConfirmDialog("Delete Event", message, async () => {
+      try {
+        await eventAPI.deleteEvent(targetId);
+        // Reload data to correctly refresh expanded events
+        await loadData();
+      } catch (err: any) {
+        setError(err.message);
       }
-    );
+    });
   };
 
   const handleSaveEvent = async (eventData: Omit<Event, "id">) => {
     try {
       if (editingEvent) {
         if (editingEvent.original_event_id) {
-           // Should have been caught by edit button click, but double check
-           alert("Cannot edit instance directly. Please edit the original event.");
-           return;
+          // Should have been caught by edit button click, but double check
+          alert(
+            "Cannot edit instance directly. Please edit the original event."
+          );
+          return;
         }
-        await eventAPI.updateEvent(
-          editingEvent.id,
-          eventData
-        );
+        await eventAPI.updateEvent(editingEvent.id, eventData);
         await loadData();
         setEditingEvent(null);
       } else {
@@ -623,7 +626,7 @@ const Calendar: React.FC = () => {
                 return (
                   <div
                     key={todo.id}
-                     className={`border rounded-lg p-3 transition-all duration-200 ${
+                    className={`border rounded-lg p-3 transition-all duration-200 ${
                       isAlreadyScheduled
                         ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
                         : todo.completed
@@ -808,7 +811,9 @@ const Calendar: React.FC = () => {
                       {itemCount.events > 0 && (
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            isPastDay ? "bg-gray-300 dark:bg-gray-600" : "bg-blue-400"
+                            isPastDay
+                              ? "bg-gray-300 dark:bg-gray-600"
+                              : "bg-blue-400"
                           }`}
                           title={`${itemCount.events} event${itemCount.events !== 1 ? "s" : ""}`}
                         ></div>
@@ -816,7 +821,9 @@ const Calendar: React.FC = () => {
                       {itemCount.todos > 0 && (
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            isPastDay ? "bg-gray-300 dark:bg-gray-600" : "bg-green-400"
+                            isPastDay
+                              ? "bg-gray-300 dark:bg-gray-600"
+                              : "bg-green-400"
                           }`}
                           title={`${itemCount.todos} todo${itemCount.todos !== 1 ? "s" : ""}`}
                         ></div>
@@ -845,7 +852,10 @@ const Calendar: React.FC = () => {
     return (
       <div className="grid grid-cols-7 gap-3 mb-6">
         {daysOfWeek.map(d => (
-          <div key={d} className="font-semibold text-center text-gray-600 dark:text-gray-400 py-4">
+          <div
+            key={d}
+            className="font-semibold text-center text-gray-600 dark:text-gray-400 py-4"
+          >
             {d}
           </div>
         ))}
@@ -893,7 +903,9 @@ const Calendar: React.FC = () => {
               {hasItemsForDay && (
                 <div
                   className={`text-sm mt-2 ${
-                    isPastDay ? "text-gray-400 dark:text-gray-600" : "text-green-600 dark:text-green-400"
+                    isPastDay
+                      ? "text-gray-400 dark:text-gray-600"
+                      : "text-green-600 dark:text-green-400"
                   }`}
                 >
                   {itemCount.total} item{itemCount.total !== 1 ? "s" : ""}
@@ -1715,8 +1727,8 @@ const Calendar: React.FC = () => {
 
       {/* Confirmation Dialog */}
       {confirmDialog.isOpen && (
-          <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               {confirmDialog.title}
             </h3>

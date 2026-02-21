@@ -138,16 +138,21 @@ const Navbar: React.FC = () => {
       const colorMap = {
         gray: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200",
         blue: "text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300",
-        green: "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300",
-        orange: "text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300",
-        purple: "text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300",
-        indigo: "text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300",
+        green:
+          "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300",
+        orange:
+          "text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300",
+        purple:
+          "text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300",
+        indigo:
+          "text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300",
       };
 
       return {
         text: colorMap[color as keyof typeof colorMap],
         bg: "hover:bg-blue-100 dark:hover:bg-gray-700",
-        border: "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500",
+        border:
+          "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500",
       };
     }
   };

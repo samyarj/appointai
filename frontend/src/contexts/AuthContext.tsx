@@ -84,8 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const applyTheme = () => {
       const theme = user?.theme || "light";
       const isDark =
-        theme === "dark" ||
-        (theme === "auto" && mediaQuery.matches);
+        theme === "dark" || (theme === "auto" && mediaQuery.matches);
 
       // Clean up legacy class on body just in case it persisted from previous versions
       document.body.classList.remove("dark");
@@ -117,13 +116,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authAPI.login(email, password);
       // Set token first so subsequent requests are authenticated
       setAuthToken(response.access_token);
-      
+
       // Fetch full user details immediately to get theme and other preferences
       const currentUser = await authAPI.getCurrentUser();
-      
+
       setUser(currentUser);
       setUserInfo(currentUser);
-      
+
       return response;
     } catch (error) {
       throw error;

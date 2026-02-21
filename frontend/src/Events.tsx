@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { eventAPI, categoryAPI } from "./api";
-import { RRule, rrulestr } from "rrule";
+import { RRule } from "rrule";
 
 type Event = {
   id: number;
@@ -43,7 +43,9 @@ const Events: React.FC = () => {
     is_recurring: false,
     recurrence_rule: "",
   });
-  const [recurrenceType, setRecurrenceType] = useState<"NONE" | "DAILY" | "WEEKLY" | "MONTHLY">("NONE");
+  const [recurrenceType, setRecurrenceType] = useState<
+    "NONE" | "DAILY" | "WEEKLY" | "MONTHLY"
+  >("NONE");
   const [recurrenceEnd, setRecurrenceEnd] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,10 +67,16 @@ const Events: React.FC = () => {
     onCancel: () => {},
   });
 
-  // Load events and categories on component mount
   useEffect(() => {
     loadEvents();
     loadCategories();
+
+    const handleRefresh = () => {
+      loadEvents();
+      loadCategories();
+    };
+    window.addEventListener("refresh_data", handleRefresh);
+    return () => window.removeEventListener("refresh_data", handleRefresh);
   }, []);
 
   const loadEvents = async () => {
@@ -90,7 +98,11 @@ const Events: React.FC = () => {
     const expanded: Event[] = [];
     const now = new Date();
     // Look ahead 1 year for recurrence expansion by default
-    const limitDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+    const limitDate = new Date(
+      now.getFullYear() + 1,
+      now.getMonth(),
+      now.getDate()
+    );
 
     rawEvents.forEach(event => {
       // Always add the original event (or its base instance)
@@ -99,36 +111,39 @@ const Events: React.FC = () => {
       if (event.is_recurring && event.recurrence_rule) {
         try {
           const ruleOptions = RRule.parseString(event.recurrence_rule);
-          
+
           // Ensure DTSTART is set to event date for correct calculations
           // Note: rrule doesn't handle timezones perfectly with strings, working with local dates here
           const [year, month, day] = event.date.split("-").map(Number);
           ruleOptions.dtstart = new Date(year, month - 1, day);
-          
+
           const rule = new RRule(ruleOptions);
           // Use dtstart to include all occurrences
-          const occurrences = rule.between(ruleOptions.dtstart, limitDate, true); 
-          
+          const occurrences = rule.between(
+            ruleOptions.dtstart,
+            limitDate,
+            true
+          );
+
           // Skip the first one if it matches the original event date (to avoid duplicates, though set logic might be better)
-          // Actually, we should probably treat the "event" object as the definition, 
+          // Actually, we should probably treat the "event" object as the definition,
           // and if we want to show instances, we might just use the instances.
           // But for now, let's keep the original and add *additional* instances.
-          
+
           occurrences.forEach((date, index) => {
-             // format YYYY-MM-DD
-             const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time usually
-             
-             if (dateStr === event.date) return; // Skip original date
+            // format YYYY-MM-DD
+            const dateStr = date.toLocaleDateString("en-CA"); // YYYY-MM-DD in local time usually
 
-             expanded.push({
-               ...event,
-               id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
-               original_event_id: event.id,
-               date: dateStr,
-               // Make instances distinct looking if needed, or treated same
-             });
+            if (dateStr === event.date) return; // Skip original date
+
+            expanded.push({
+              ...event,
+              id: -1 * (event.id * 1000 + index), // Temporary ID for frontend key
+              original_event_id: event.id,
+              date: dateStr,
+              // Make instances distinct looking if needed, or treated same
+            });
           });
-
         } catch (err) {
           console.error("Failed to parse recurrence rule", err, event);
         }
@@ -213,20 +228,20 @@ const Events: React.FC = () => {
         newEvent.startTime!,
         newEvent.endTime!
       );
-      
+
       let rrule = undefined;
       if (recurrenceType !== "NONE") {
-         let parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
-         if (recurrenceEnd) {
-           // Format date to YYYYMMDD for RRULE UNTIL
-           const endDate = new Date(recurrenceEnd);
-           const yyyy = endDate.getFullYear();
-           const mm = String(endDate.getMonth() + 1).padStart(2, '0');
-           const dd = String(endDate.getDate()).padStart(2, '0');
-           // UNTIL expects UTC usually or floating. Let's use floating date format for now T235959
-           parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
-         }
-         rrule = parts.join(";");
+        const parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
+        if (recurrenceEnd) {
+          // Format date to YYYYMMDD for RRULE UNTIL
+          const endDate = new Date(recurrenceEnd);
+          const yyyy = endDate.getFullYear();
+          const mm = String(endDate.getMonth() + 1).padStart(2, "0");
+          const dd = String(endDate.getDate()).padStart(2, "0");
+          // UNTIL expects UTC usually or floating. Let's use floating date format for now T235959
+          parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
+        }
+        rrule = parts.join(";");
       }
 
       const eventData = {
@@ -243,7 +258,7 @@ const Events: React.FC = () => {
       await eventAPI.createEvent(eventData);
       // Reload all events to get authoritative list (simplified)
       await loadEvents();
-      
+
       setNewEvent({
         title: "",
         date: "",
@@ -267,12 +282,14 @@ const Events: React.FC = () => {
 
   const handleEditEvent = (event: Event) => {
     if (event.original_event_id) {
-        // If it's a generated instance, we should probably edit the original
-        // For now, let's just warn or handle it simply finding the original
-        alert("Editing a single instance of a recurring event is not fully supported yet. Please edit the original event.");
-        const original = events.find(e => e.id === event.original_event_id);
-        if (original) event = original;
-        else return; 
+      // If it's a generated instance, we should probably edit the original
+      // For now, let's just warn or handle it simply finding the original
+      alert(
+        "Editing a single instance of a recurring event is not fully supported yet. Please edit the original event."
+      );
+      const original = events.find(e => e.id === event.original_event_id);
+      if (original) event = original;
+      else return;
     }
 
     setEditingEvent(event);
@@ -286,17 +303,17 @@ const Events: React.FC = () => {
       is_recurring: event.is_recurring,
       recurrence_rule: event.recurrence_rule,
     });
-    
+
     // Parse recurrence rule to set type and end date
     setRecurrenceType("NONE");
     setRecurrenceEnd("");
-    
+
     if (event.is_recurring && event.recurrence_rule) {
       const rule = event.recurrence_rule;
       if (rule.includes("FREQ=DAILY")) setRecurrenceType("DAILY");
       else if (rule.includes("FREQ=WEEKLY")) setRecurrenceType("WEEKLY");
       else if (rule.includes("FREQ=MONTHLY")) setRecurrenceType("MONTHLY");
-      
+
       // Parse UNTIL if present
       const match = rule.match(/UNTIL=(\d{8})/);
       if (match) {
@@ -327,18 +344,18 @@ const Events: React.FC = () => {
         newEvent.startTime!,
         newEvent.endTime!
       );
-      
+
       let rrule = undefined;
       if (recurrenceType !== "NONE") {
-         let parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
-         if (recurrenceEnd) {
-           const endDate = new Date(recurrenceEnd);
-           const yyyy = endDate.getFullYear();
-           const mm = String(endDate.getMonth() + 1).padStart(2, '0');
-           const dd = String(endDate.getDate()).padStart(2, '0');
-           parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
-         }
-         rrule = parts.join(";");
+        const parts = [`FREQ=${recurrenceType}`, `INTERVAL=1`];
+        if (recurrenceEnd) {
+          const endDate = new Date(recurrenceEnd);
+          const yyyy = endDate.getFullYear();
+          const mm = String(endDate.getMonth() + 1).padStart(2, "0");
+          const dd = String(endDate.getDate()).padStart(2, "0");
+          parts.push(`UNTIL=${yyyy}${mm}${dd}T235959`);
+        }
+        rrule = parts.join(";");
       }
 
       const eventData = {
@@ -352,13 +369,10 @@ const Events: React.FC = () => {
         recurrence_rule: rrule,
       };
 
-      await eventAPI.updateEvent(
-        editingEvent.id,
-        eventData
-      );
-      
+      await eventAPI.updateEvent(editingEvent.id, eventData);
+
       await loadEvents();
-      
+
       setEditingEvent(null);
       setNewEvent({
         title: "",
@@ -385,34 +399,30 @@ const Events: React.FC = () => {
     // If it's an instance, delete the original (for now)
     const event = events.find(e => e.id === id);
     if (!event) return;
-    
+
     // Check if it's a frontend instance
     const targetId = event.original_event_id || event.id;
     const isInstance = !!event.original_event_id;
-    
+
     const eventName = event.title;
-    const message = isInstance 
-       ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
-       : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
+    const message = isInstance
+      ? `This is an instance of a recurring event. Deleting it will delete the entire series "${eventName}". Continue?`
+      : `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
-    showConfirmDialog(
-      "Delete Event",
-      message,
-      async () => {
-        setActionStatus({ type: "loading", message: "Deleting event..." });
+    showConfirmDialog("Delete Event", message, async () => {
+      setActionStatus({ type: "loading", message: "Deleting event..." });
 
-        try {
-          await eventAPI.deleteEvent(targetId);
-          // Reload to refresh list
-          await loadEvents();
-          showStatus("success", "Event deleted successfully!");
-        } catch (e) {
-          const errorMessage =
-            e instanceof Error ? e.message : "Failed to delete event";
-          showStatus("error", errorMessage);
-        }
+      try {
+        await eventAPI.deleteEvent(targetId);
+        // Reload to refresh list
+        await loadEvents();
+        showStatus("success", "Event deleted successfully!");
+      } catch (e) {
+        const errorMessage =
+          e instanceof Error ? e.message : "Failed to delete event";
+        showStatus("error", errorMessage);
       }
-    );
+    });
   };
 
   const getFilteredAndSortedEvents = () => {
@@ -497,7 +507,9 @@ const Events: React.FC = () => {
         {/* Header */}
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Events</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+              Events
+            </h1>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
@@ -535,21 +547,35 @@ const Events: React.FC = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">Total</h3>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">
+                Total
+              </h3>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {stats.total}
+              </p>
               <p className="text-xs text-blue-600 dark:text-blue-400">Events</p>
             </div>
             <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">Upcoming</h3>
+              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">
+                Upcoming
+              </h3>
               <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                 {stats.upcoming}
               </p>
-              <p className="text-xs text-green-600 dark:text-green-400">Scheduled</p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                Scheduled
+              </p>
             </div>
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 dark:text-purple-300 text-sm">Past</h3>
-              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.past}</p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">Completed</p>
+              <h3 className="font-semibold text-purple-800 dark:text-purple-300 text-sm">
+                Past
+              </h3>
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                {stats.past}
+              </p>
+              <p className="text-xs text-purple-600 dark:text-purple-400">
+                Completed
+              </p>
             </div>
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg p-4">
               <h3 className="font-semibold text-orange-800 dark:text-orange-300 text-sm">
@@ -558,7 +584,9 @@ const Events: React.FC = () => {
               <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                 {stats.thisMonth}
               </p>
-              <p className="text-xs text-orange-600 dark:text-orange-400">Events</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400">
+                Events
+              </p>
             </div>
           </div>
 
@@ -722,7 +750,9 @@ const Events: React.FC = () => {
                       <div className="flex gap-2">
                         <select
                           value={recurrenceType}
-                          onChange={e => setRecurrenceType(e.target.value as any)}
+                          onChange={e =>
+                            setRecurrenceType(e.target.value as any)
+                          }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
                         >
                           <option value="NONE">Does not repeat</option>
@@ -731,7 +761,7 @@ const Events: React.FC = () => {
                           <option value="MONTHLY">Monthly</option>
                         </select>
                         {recurrenceType !== "NONE" && (
-                          <input 
+                          <input
                             type="date"
                             placeholder="Until (optional)"
                             value={recurrenceEnd}
@@ -798,8 +828,8 @@ const Events: React.FC = () => {
                         setRecurrenceType("NONE");
                         setRecurrenceEnd("");
                       }}
-                        className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
-                      >
+                      className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
+                    >
                       Cancel
                     </button>
                   </div>
@@ -837,7 +867,9 @@ const Events: React.FC = () => {
                               ></div>
                               <h3
                                 className={`font-semibold text-xl ${
-                                  isPast ? "text-gray-600 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
+                                  isPast
+                                    ? "text-gray-600 dark:text-gray-500"
+                                    : "text-gray-800 dark:text-gray-100"
                                 }`}
                               >
                                 {event.title}
@@ -856,7 +888,9 @@ const Events: React.FC = () => {
 
                             <div
                               className={`space-y-2 text-sm ${
-                                isPast ? "text-gray-500 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"
+                                isPast
+                                  ? "text-gray-500 dark:text-gray-500"
+                                  : "text-gray-600 dark:text-gray-300"
                               }`}
                             >
                               <div className="flex items-center gap-2">
@@ -893,26 +927,45 @@ const Events: React.FC = () => {
                                   </span>
                                 </div>
 
-                                {event.is_recurring && !event.original_event_id && (
-                                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400" title={`Recurs: ${event.recurrence_rule}`}>
-                                    <span>🔁</span>
-                                    <span className="text-xs">
-                                      {event.recurrence_rule?.includes("DAILY") ? "Daily" : 
-                                       event.recurrence_rule?.includes("WEEKLY") ? "Weekly" : 
-                                       event.recurrence_rule?.includes("MONTHLY") ? "Monthly" : "Recurring"}
-                                    </span>
-                                  </div>
-                                )}
+                                {event.is_recurring &&
+                                  !event.original_event_id && (
+                                    <div
+                                      className="flex items-center gap-2 text-blue-600 dark:text-blue-400"
+                                      title={`Recurs: ${event.recurrence_rule}`}
+                                    >
+                                      <span>🔁</span>
+                                      <span className="text-xs">
+                                        {event.recurrence_rule?.includes(
+                                          "DAILY"
+                                        )
+                                          ? "Daily"
+                                          : event.recurrence_rule?.includes(
+                                                "WEEKLY"
+                                              )
+                                            ? "Weekly"
+                                            : event.recurrence_rule?.includes(
+                                                  "MONTHLY"
+                                                )
+                                              ? "Monthly"
+                                              : "Recurring"}
+                                      </span>
+                                    </div>
+                                  )}
                                 {event.original_event_id && (
-                                  <div className="flex items-center gap-2 text-gray-400" title="Instance of recurring event">
-                                     <span>↪️</span>
-                                     <span className="text-xs">Recursive Instance</span>
+                                  <div
+                                    className="flex items-center gap-2 text-gray-400"
+                                    title="Instance of recurring event"
+                                  >
+                                    <span>↪️</span>
+                                    <span className="text-xs">
+                                      Recursive Instance
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex space-x-2 ml-4">
                             <button
                               onClick={() => handleEditEvent(event)}
@@ -934,7 +987,9 @@ const Events: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">📅</div>
+                  <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">
+                    📅
+                  </div>
                   <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
                     No events found
                   </h3>

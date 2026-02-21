@@ -125,7 +125,7 @@ const Profile: React.FC = () => {
 
     const updatedUser = { ...user, [field]: value };
     setUser(updatedUser);
-    
+
     // Update global context immediately for things like theme
     updateUser({ [field]: value });
 
@@ -288,7 +288,9 @@ const Profile: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Email Notifications</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">
+              Email Notifications
+            </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Receive notifications via email
             </p>
@@ -312,7 +314,9 @@ const Profile: React.FC = () => {
 
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Push Notifications</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">
+              Push Notifications
+            </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Receive push notifications in browser
             </p>
@@ -336,8 +340,12 @@ const Profile: React.FC = () => {
 
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Event Reminders</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Get reminded before events</p>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">
+              Event Reminders
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Get reminded before events
+            </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -358,7 +366,9 @@ const Profile: React.FC = () => {
 
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Weekly Digest</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">
+              Weekly Digest
+            </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Weekly summary of your activities
             </p>
@@ -387,7 +397,9 @@ const Profile: React.FC = () => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Profile Visibility</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+            Profile Visibility
+          </h4>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Choose who can see your profile
           </p>
@@ -410,7 +422,9 @@ const Profile: React.FC = () => {
 
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Show Activity Status</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">
+              Show Activity Status
+            </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Let others see when you're active
             </p>
@@ -434,7 +448,9 @@ const Profile: React.FC = () => {
       </div>
 
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-4">Danger Zone</h4>
+        <h4 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-4">
+          Danger Zone
+        </h4>
         <div className="space-y-3">
           <button className="w-full px-4 py-2 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
             Clear All Data

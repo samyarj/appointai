@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchAPI, authAPI } from "./api";
 import { useAuth } from "./contexts/AuthContext";
+import { useRefresh } from "./contexts/RefreshContext";
 
 type UserProfile = {
   id: number;
@@ -89,6 +90,7 @@ const useDebouncedProfileUpdate = (delay: number = 300) => {
 
 const Profile: React.FC = () => {
   const { logout, updateUser } = useAuth();
+  const { refreshKey } = useRefresh();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ const Profile: React.FC = () => {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   // Get user initials for avatar
   const getUserInitials = (name: string) => {

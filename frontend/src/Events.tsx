@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { eventAPI, categoryAPI } from "./api";
+import { useRefresh } from "./contexts/RefreshContext";
 import { RRule } from "rrule";
 
 type Event = {
@@ -68,6 +69,7 @@ const Events: React.FC = () => {
   });
   
   const [expandedSeries, setExpandedSeries] = useState<Record<number, boolean>>({});
+  const { refreshKey } = useRefresh();
 
   const toggleSeries = (id: number) => {
     setExpandedSeries(prev => ({ ...prev, [id]: !prev[id] }));
@@ -83,7 +85,7 @@ const Events: React.FC = () => {
     };
     window.addEventListener("refresh_data", handleRefresh);
     return () => window.removeEventListener("refresh_data", handleRefresh);
-  }, []);
+  }, [refreshKey]);
 
   const loadEvents = async () => {
     setLoading(true);

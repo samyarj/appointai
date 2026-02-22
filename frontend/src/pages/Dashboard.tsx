@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../api";
 import { useAuth } from "../contexts/AuthContext";
+import { useRefresh } from "../contexts/RefreshContext";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const { refreshKey } = useRefresh();
   const [events, setEvents] = useState<any[]>([]);
   const [todos, setTodos] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -25,7 +27,7 @@ const Dashboard: React.FC = () => {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   // Calculate statistics
   const getStatistics = () => {

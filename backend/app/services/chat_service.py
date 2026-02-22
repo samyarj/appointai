@@ -58,10 +58,11 @@ class ChatService:
         6. query_calendar
         7. update_todo
         8. delete_todo
+        9. query_todos
         
         Output strictly valid JSON with the following structure:
         {{
-            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "query_calendar" | "update_todo" | "delete_todo" | "unknown",
+            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "query_calendar" | "update_todo" | "delete_todo" | "query_todos" | "unknown",
             "entities": {{
                 // For create_event/update_event:
                 "title": "string",
@@ -89,7 +90,10 @@ class ChatService:
 
                  // For query_calendar:
                 "date_range_start": "YYYY-MM-DD",
-                "date_range_end": "YYYY-MM-DD"
+                "date_range_end": "YYYY-MM-DD",
+
+                 // For query_todos:
+                "status": "pending" | "completed" | "all"
             }},
             // For update_event, delete_event, update_todo, or delete_todo, provide search_criteria to find the item:
             "search_criteria": {{
@@ -112,6 +116,7 @@ class ChatService:
         - If the user specifies a start month for a recurring event, set the "date" field accordingly.
         - If intent is "update_event", "delete_event", "update_todo", or "delete_todo", you MUST provide "search_criteria" derived from the user's request (e.g., "delete my gym class" -> keyword: "gym").
         - If intent is "query_calendar", derive the date range from the user's request (e.g., "this week" -> start=today, end=end of week).
+        - If intent is "query_todos", extract the desired status (pending/completed/all). Defaults to 'pending' if the user just asks for 'my todos'.
         - If the user says "sometime next week" or "find a time", set "auto_schedule": true, and set "time_range_start" and "time_range_end" to the requested period.
         - If category is mentioned, try to match with Existing Categories.
         - If you cannot understand, set intent to "unknown".
@@ -366,6 +371,30 @@ class ChatService:
                     lines = [f"Here is your schedule from {start_date_str} to {end_date_str}:"]
                     for e in sorted(relevant_events, key=lambda x: (x.date, x.start_time)):
                         lines.append(f"- {e.date} {e.start_time.strftime('%H:%M')} - {e.title}")
+                    summary = "\n".join(lines)
+                
+                return ChatResponse(response=summary)
+
+            elif intent == "query_todos":
+                user_todos = TodoService.get_todos_by_user(db, user.id)
+                entities = parsed.get("entities", {})
+                status_filter = entities.get("status", "pending")
+                
+                relevant_todos = []
+                for t in user_todos:
+                    if status_filter == "pending" and t.completed:
+                        continue
+                    if status_filter == "completed" and not t.completed:
+                        continue
+                    relevant_todos.append(t)
+                
+                if not relevant_todos:
+                    summary = f"You have no {status_filter} todos at the moment."
+                else:
+                    lines = [f"Here are your {status_filter} todos:"]
+                    for t in relevant_todos:
+                        status_str = "[x]" if t.completed else "[ ]"
+                        lines.append(f"- {status_str} {t.title}")
                     summary = "\n".join(lines)
                 
                 return ChatResponse(response=summary)

@@ -56,10 +56,12 @@ class ChatService:
         4. update_event
         5. delete_event
         6. query_calendar
+        7. update_todo
+        8. delete_todo
         
         Output strictly valid JSON with the following structure:
         {{
-            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "query_calendar" | "unknown",
+            "intent": "create_event" | "create_todo" | "create_category" | "update_event" | "delete_event" | "query_calendar" | "update_todo" | "delete_todo" | "unknown",
             "entities": {{
                 // For create_event/update_event:
                 "title": "string",
@@ -89,14 +91,15 @@ class ChatService:
                 "date_range_start": "YYYY-MM-DD",
                 "date_range_end": "YYYY-MM-DD"
             }},
-            // For update_event or delete_event, provide search_criteria to find the event:
+            // For update_event, delete_event, update_todo, or delete_todo, provide search_criteria to find the item:
             "search_criteria": {{
-                "title_keyword": "string (part of title to match, e.g. 'gym')",
+                "title_keyword": "string (part of title to match, e.g. 'gym' or 'groceries')",
                 "date": "YYYY-MM-DD (optional, if specified)"
             }},
-            // For update_event, allow explicit updates object (optional, defaults to entities):
+            // For update_event or update_todo, allow explicit updates object (optional, defaults to entities):
             "updates": {{
-                 "startTime": "HH:MM" 
+                 "startTime": "HH:MM",
+                 "completed": "boolean"
                  // etc.
             }},
             "response_text": "A natural language confirmation message to show the user. If auto-scheduling, say 'I found a slot at...'"
@@ -107,7 +110,7 @@ class ChatService:
         - If time is given without end time, assume 1 hour duration.
         - If the user specifies a range for recurrence (e.g., 'for 3 months', 'until May'), calculate the UNTIL date based on the Current Local Time and include it in the RRULE.
         - If the user specifies a start month for a recurring event, set the "date" field accordingly.
-        - If intent is "update_event" or "delete_event", you MUST provide "search_criteria" derived from the user's request (e.g., "delete my gym class" -> keyword: "gym").
+        - If intent is "update_event", "delete_event", "update_todo", or "delete_todo", you MUST provide "search_criteria" derived from the user's request (e.g., "delete my gym class" -> keyword: "gym").
         - If intent is "query_calendar", derive the date range from the user's request (e.g., "this week" -> start=today, end=end of week).
         - If the user says "sometime next week" or "find a time", set "auto_schedule": true, and set "time_range_start" and "time_range_end" to the requested period.
         - If category is mentioned, try to match with Existing Categories.
@@ -294,6 +297,46 @@ class ChatService:
                     )
                     EventService.update_event(db, user.id, matched_event.id, update_data)
                     return ChatResponse(response=response_text, action_taken="update_event")
+                    
+            elif intent in ["update_todo", "delete_todo"]:
+                user_todos = TodoService.get_todos_by_user(db, user.id)
+                search_criteria = parsed.get("search_criteria", {})
+                title_query = search_criteria.get("title_keyword", "").lower()
+                
+                matched_todo = None
+                
+                candidates = []
+                for t in user_todos:
+                    if title_query and title_query in t.title.lower():
+                        candidates.append(t)
+                
+                if len(candidates) >= 1:
+                    matched_todo = candidates[0]
+                     
+                if not matched_todo:
+                    return ChatResponse(
+                        response=f"I couldn't find a task matching '{title_query}'. Please be more specific."
+                    )
+                
+                if intent == "delete_todo":
+                    TodoService.delete_todo(db, user.id, matched_todo.id)
+                    return ChatResponse(response=response_text, action_taken="delete_todo")
+                
+                elif intent == "update_todo":
+                    updates = parsed.get("updates", {}) or entities
+                    from app.schemas.todo import TodoUpdateSchema
+                    
+                    update_data = TodoUpdateSchema(
+                        title=updates.get("title"),
+                        description=updates.get("description"),
+                        priority=updates.get("priority"),
+                        estimated_duration=updates.get("estimated_duration"),
+                        due_date=updates.get("due_date"),
+                        category_id=category_id,
+                        completed=updates.get("completed")
+                    )
+                    TodoService.update_todo(db, user.id, matched_todo.id, update_data)
+                    return ChatResponse(response=response_text, action_taken="update_todo")
             
             elif intent == "query_calendar":
                 from datetime import datetime, date

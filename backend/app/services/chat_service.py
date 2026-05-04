@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 from sqlalchemy.orm import Session
 from groq import AsyncGroq
+from app.core.config import settings
 
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.event import EventCreateSchema
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class ChatService:
     @staticmethod
     async def process_message(db: Session, user: User, request: ChatRequest) -> ChatResponse:
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = settings.GROQ_API_KEY
         
         if not api_key:
             return ChatResponse(

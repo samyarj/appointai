@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = _DEFAULT_SECRET
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    GROQ_API_KEY: str | None = None
 
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

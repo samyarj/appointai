@@ -1,1 +1,1 @@
-from .all_models import User, Category, Event, Todo
+from .all_models import User as User, Category as Category, Event as Event, Todo as Todo

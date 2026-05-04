@@ -31,7 +31,8 @@ class EventService:
             return event
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to create event: {str(e)}")
+            print(f"Error creating event: {e}")
+            raise InternalServerException(detail="Failed to create event")
 
     @staticmethod
     def get_event_by_id(db: Session, event_id: int, user_id: int) -> Optional[Event]:
@@ -73,7 +74,8 @@ class EventService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to update event: {str(e)}")
+            print(f"Error updating event: {e}")
+            raise InternalServerException(detail="Failed to update event")
 
     @staticmethod
     def delete_event(db: Session, user_id: int, event_id: int) -> None:
@@ -88,4 +90,5 @@ class EventService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to delete event: {str(e)}")
+            print(f"Error deleting event: {e}")
+            raise InternalServerException(detail="Failed to delete event")

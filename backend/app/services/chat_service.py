@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Optional
 from sqlalchemy.orm import Session
 from groq import AsyncGroq
 
@@ -344,7 +344,7 @@ class ChatService:
                     return ChatResponse(response=response_text, action_taken="update_todo")
             
             elif intent == "query_calendar":
-                from datetime import datetime, date
+                from datetime import date
                 # Fetch events and return summary
                 entities = parsed.get("entities", {})
                 start_date_str = entities.get("date_range_start") or entities.get("date")
@@ -419,12 +419,12 @@ class ChatService:
             if 'h' in duration_str:
                 try:
                     duration_minutes = int(float(duration_str.replace('h', '')) * 60)
-                except:
+                except ValueError:
                    pass
             elif 'm' in duration_str:
                 try:
                      duration_minutes = int(duration_str.replace('m', ''))
-                except:
+                except ValueError:
                     pass
         
         start_date = date.fromisoformat(start_date_str)

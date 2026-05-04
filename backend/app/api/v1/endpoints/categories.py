@@ -7,7 +7,6 @@ from app.core.dependencies import get_current_active_user
 from app.schemas.category import CategorySchema, CategoryCreateSchema, CategoryUpdateSchema
 from app.models import User
 from app.services.category_service import CategoryService
-from app.core.exceptions import AppointAIException
 
 router = APIRouter()
 

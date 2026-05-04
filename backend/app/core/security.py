@@ -1,12 +1,13 @@
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from jose import JWTError, jwt
+from jose import jwt
 from app.core.config import settings
+import hashlib
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-import hashlib
+
 
 def verify_password(plain_password, hashed_password):
     # Pre-hash with SHA256 to avoid bcrypt's 72-byte limit

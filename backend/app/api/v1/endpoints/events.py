@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -7,7 +7,6 @@ from app.core.dependencies import get_current_active_user
 from app.schemas.event import EventSchema, EventCreateSchema, EventUpdateSchema
 from app.models import User
 from app.services.event_service import EventService
-from app.core.exceptions import AppointAIException
 
 router = APIRouter()
 

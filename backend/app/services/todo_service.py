@@ -30,7 +30,8 @@ class TodoService:
             return todo
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to create todo: {str(e)}")
+            print(f"Error creating todo: {e}")
+            raise InternalServerException(detail="Failed to create todo")
 
     @staticmethod
     def get_todo_by_id(db: Session, todo_id: int, user_id: int) -> Optional[Todo]:
@@ -70,7 +71,8 @@ class TodoService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to update todo: {str(e)}")
+            print(f"Error updating todo: {e}")
+            raise InternalServerException(detail="Failed to update todo")
 
     @staticmethod
     def delete_todo(db: Session, user_id: int, todo_id: int) -> None:
@@ -85,4 +87,5 @@ class TodoService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to delete todo: {str(e)}")
+            print(f"Error deleting todo: {e}")
+            raise InternalServerException(detail="Failed to delete todo")

@@ -7,7 +7,6 @@ from app.core.dependencies import get_current_active_user
 from app.schemas.todo import TodoSchema, TodoCreateSchema, TodoUpdateSchema
 from app.models import User
 from app.services.todo_service import TodoService
-from app.core.exceptions import AppointAIException
 
 router = APIRouter()
 

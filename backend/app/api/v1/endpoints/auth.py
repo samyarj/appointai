@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, verify_password, get_password_hash
-from app.core.dependencies import get_current_user, get_current_active_user
 from app.schemas.token import Token
 from app.schemas.user import UserRegister, UserLogin
 from app.models import User
@@ -46,7 +45,8 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         )
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+        print(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
 
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):

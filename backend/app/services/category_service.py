@@ -37,7 +37,8 @@ class CategoryService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to create category: {str(e)}")
+            print(f"Error creating category: {e}")
+            raise InternalServerException(detail="Failed to create category")
 
     @staticmethod
     def get_category_by_id(db: Session, category_id: int) -> Optional[Category]:
@@ -78,7 +79,8 @@ class CategoryService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to update category: {str(e)}")
+            print(f"Error updating category: {e}")
+            raise InternalServerException(detail="Failed to update category")
 
     @staticmethod
     def delete_category(db: Session, category_id: int) -> None:
@@ -100,4 +102,5 @@ class CategoryService:
             raise
         except Exception as e:
             db.rollback()
-            raise InternalServerException(detail=f"Failed to delete category: {str(e)}")
+            print(f"Error deleting category: {e}")
+            raise InternalServerException(detail="Failed to delete category")

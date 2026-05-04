@@ -114,4 +114,4 @@ def update_profile(
         # Log the actual error for debugging
         print(f"Profile update error: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update profile. Please try again.")

@@ -74,7 +74,7 @@ python migrate.py
 ```bash
 cd backend
 source .venv/bin/activate   # if you use a venv
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Terminal 2 — Frontend**
@@ -110,7 +110,7 @@ Backend and frontend each have a short `README.md` with folder-specific notes; *
 
 | Task           | Command                                                              |
 | -------------- | -------------------------------------------------------------------- |
-| Backend (dev)  | `cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000` |
+| Backend (dev)  | `cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000` |
 | Frontend (dev) | `cd frontend && npm run dev`                                         |
 | Migrate DB     | `cd backend && python migrate.py`                                    |
 | Frontend build | `cd frontend && npm run build`                                       |

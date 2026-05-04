@@ -72,7 +72,7 @@ const ChatAssistant: React.FC = () => {
     try {
       const response = await chatAPI.sendMessage(
         userMessage.content,
-        new Date().toString()
+        new Date().toISOString()
       );
 
       const botMessage: Message = {

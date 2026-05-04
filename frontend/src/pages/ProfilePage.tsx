@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchAPI, authAPI } from "./api";
-import { useAuth } from "./contexts/AuthContext";
-import { useRefresh } from "./contexts/RefreshContext";
+import { fetchAPI, authAPI } from "../api";
+import { useAuth } from "../contexts/AuthContext";
+import { useRefresh } from "../contexts/RefreshContext";
 
 type UserProfile = {
   id: number;

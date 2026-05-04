@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { categoryAPI } from "./api";
-import { useRefresh } from "./contexts/RefreshContext";
+import { categoryAPI } from "../api";
+import { useRefresh } from "../contexts/RefreshContext";
 
 interface Category {
   id: number;

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Date, Time, Boolean, ForeignKey, TIMESTAMP, JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.session import Base
 
 class User(Base):
@@ -10,7 +10,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)  # For JWT authentication
     avatar = Column(Text)
-    join_date = Column(Date, default=datetime.utcnow().date)
+    join_date = Column(Date, default=lambda: datetime.now(timezone.utc).date())
     timezone = Column(String(50), default='UTC')
     date_format = Column(String(20), default='MM/DD/YYYY')
     time_format = Column(String(10), default='12h')
@@ -27,8 +27,8 @@ class User(Base):
     })
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
-    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     events = relationship('Event', back_populates='user')
     todos = relationship('Todo', back_populates='user')

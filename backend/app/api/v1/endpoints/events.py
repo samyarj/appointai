@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.api.v1.endpoints.auth import get_current_active_user
+from app.core.dependencies import get_current_active_user
 from app.schemas.event import EventSchema, EventCreateSchema, EventUpdateSchema
 from app.models import User
 from app.services.event_service import EventService

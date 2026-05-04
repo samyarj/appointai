@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { todoAPI, categoryAPI } from "./api";
-import { useRefresh } from "./contexts/RefreshContext";
+import { todoAPI, categoryAPI } from "../api";
+import { useRefresh } from "../contexts/RefreshContext";
 
 type TodoItem = {
   id: number;

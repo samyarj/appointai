@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import Category
 from app.schemas.category import CategoryCreateSchema, CategoryUpdateSchema
 from app.core.exceptions import NotFoundException, BadRequestException, InternalServerException
-from datetime import datetime
+from datetime import datetime, timezone
 
 class CategoryService:
     @staticmethod
@@ -26,7 +26,7 @@ class CategoryService:
                 name=category_data.name,
                 color=category_data.color,
                 description=category_data.description,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 usage_count=0
             )
             db.add(category)

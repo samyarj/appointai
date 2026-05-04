@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.models import Event
@@ -16,14 +16,14 @@ class EventService:
             event = Event(
                 user_id=user_id,
                 title=event_data.title,
-                date=datetime.strptime(event_data.date, "%Y-%m-%d").date(),
+                date=event_data.date,  # Already a date object from Pydantic
                 start_time=datetime.strptime(event_data.startTime, "%H:%M").time(),
                 end_time=datetime.strptime(event_data.endTime, "%H:%M").time(),
                 category_id=event_data.category_id,
                 duration=event_data.duration,
                 is_recurring=event_data.is_recurring,
                 recurrence_rule=event_data.recurrence_rule,
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             db.add(event)
             db.commit()
@@ -51,7 +51,7 @@ class EventService:
             if event_data.title is not None:
                 event.title = event_data.title
             if event_data.date is not None:
-                event.date = datetime.strptime(event_data.date, "%Y-%m-%d").date()
+                event.date = event_data.date  # Already a date object from Pydantic
             if event_data.startTime is not None:
                 event.start_time = datetime.strptime(event_data.startTime, "%H:%M").time()
             if event_data.endTime is not None:

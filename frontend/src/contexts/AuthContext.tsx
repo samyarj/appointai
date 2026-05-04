@@ -14,6 +14,18 @@ import {
   setAuthToken,
 } from "../api";
 
+interface NotificationSettings {
+  email: boolean;
+  push: boolean;
+  reminders: boolean;
+  weeklyDigest: boolean;
+}
+
+interface PrivacySettings {
+  profileVisibility: "public" | "private" | "friends";
+  showActivity: boolean;
+}
+
 interface User {
   id: number;
   name: string;
@@ -24,15 +36,15 @@ interface User {
   date_format?: string;
   time_format?: string;
   theme?: string;
-  notifications?: any;
-  privacy?: any;
+  notifications?: NotificationSettings;
+  privacy?: PrivacySettings;
   is_verified?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }

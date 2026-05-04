@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { eventAPI, todoAPI, categoryAPI } from "./api";
-import { useRefresh } from "./contexts/RefreshContext";
+import { eventAPI, todoAPI, categoryAPI } from "../api";
+import { useRefresh } from "../contexts/RefreshContext";
 import { RRule } from "rrule";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

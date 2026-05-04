@@ -8,11 +8,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Import other pages/components
 import Login from "./components/Login";
-import Calendar from "./Calendar";
-import Events from "./Events";
-import Todo from "./Todo";
-import Categories from "./Categories";
-import Profile from "./Profile";
+import Calendar from "./pages/CalendarPage";
+import Events from "./pages/EventsPage";
+import Todo from "./pages/TodoPage";
+import Categories from "./pages/CategoriesPage";
+import Profile from "./pages/ProfilePage";
 
 const App: React.FC = () => {
   return (

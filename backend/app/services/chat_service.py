@@ -405,7 +405,7 @@ class ChatService:
         except Exception as e:
             logger.error(f"LLM Error: {str(e)}", exc_info=True)
             return ChatResponse(
-                response=f"Sorry, I ran into an issue filtering your request: {str(e)}",
+                response="Sorry, I ran into an issue processing your request. Please try again.",
                 action_taken="error"
             )
 
@@ -459,11 +459,10 @@ class ChatService:
                  slot_end = current_slot_start + timedelta(minutes=duration_minutes)
                  is_busy = False
                  for b_start, b_end in busy_slots:
-                     # Overlap check
-                     # (StartA < EndB) and (EndA > StartB)
+                     # Overlap check: (StartA < EndB) and (EndA > StartB)
                      if current_slot_start < b_end and slot_end > b_start:
                          is_busy = True
-                         # Jump to end of this busy slot to optimize
+                         # Jump past this busy slot
                          current_slot_start = b_end
                          break
                  
@@ -473,17 +472,6 @@ class ChatService:
                          "startTime": current_slot_start.strftime("%H:%M"),
                          "endTime": slot_end.strftime("%H:%M")
                      }
-                 
-                 # If we didn't jump, increment by 15 mins
-                 if not is_busy: # Should have returned, but safety
-                     pass 
-                 else:
-                     # Optimization: we already jumped current_slot_start to b_end
-                     pass
-                     
-                 if is_busy:
-                      pass # continue outer while
-                 else:
-                      pass # logic redundancy, unreachable
+                 # If busy, current_slot_start was already advanced to b_end above
         
         return None

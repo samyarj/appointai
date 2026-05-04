@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import Todo
 from app.schemas.todo import TodoCreateSchema, TodoUpdateSchema
 from app.core.exceptions import NotFoundException, InternalServerException
-from datetime import datetime
+from datetime import datetime, timezone
 
 class TodoService:
     @staticmethod
@@ -19,10 +19,10 @@ class TodoService:
                 description=todo_data.description,
                 priority=todo_data.priority, 
                 estimated_duration=todo_data.estimated_duration,
-                due_date=datetime.strptime(todo_data.due_date, "%Y-%m-%d").date() if todo_data.due_date else None,
+                due_date=todo_data.due_date,  # Already a date object from Pydantic
                 category_id=todo_data.category_id,
                 completed=False,
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             db.add(todo)
             db.commit()
@@ -56,7 +56,7 @@ class TodoService:
             if todo_data.estimated_duration is not None:
                 todo.estimated_duration = todo_data.estimated_duration
             if todo_data.due_date is not None:
-                todo.due_date = datetime.strptime(todo_data.due_date, "%Y-%m-%d").date()
+                todo.due_date = todo_data.due_date  # Already a date object from Pydantic
             if todo_data.category_id is not None:
                 todo.category_id = todo_data.category_id
             if todo_data.completed is not None:

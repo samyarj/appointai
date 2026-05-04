@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import date
 
 class TodoSchema(BaseModel):
     id: int
@@ -20,7 +21,7 @@ class TodoCreateSchema(BaseModel):
     description: Optional[str] = None
     priority: Optional[str] = "medium"
     estimated_duration: Optional[str] = None
-    due_date: Optional[str] = None
+    due_date: Optional[date] = None
     category_id: Optional[int] = None
 
 class TodoUpdateSchema(BaseModel):
@@ -28,6 +29,6 @@ class TodoUpdateSchema(BaseModel):
     description: Optional[str] = None
     priority: Optional[str] = None
     estimated_duration: Optional[str] = None
-    due_date: Optional[str] = None
+    due_date: Optional[date] = None
     category_id: Optional[int] = None
     completed: Optional[bool] = None

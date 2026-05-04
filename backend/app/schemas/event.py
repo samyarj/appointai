@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import date, time
 
 class EventSchema(BaseModel):
     id: int
@@ -18,8 +19,8 @@ class EventSchema(BaseModel):
 
 class EventCreateSchema(BaseModel):
     title: str
-    date: str
-    startTime: str
+    date: date
+    startTime: str  # Kept as str to allow "HH:MM" format from frontend
     endTime: str
     category_id: Optional[int] = None
     duration: Optional[str] = None
@@ -28,7 +29,7 @@ class EventCreateSchema(BaseModel):
 
 class EventUpdateSchema(BaseModel):
     title: Optional[str] = None
-    date: Optional[str] = None
+    date: Optional[date] = None
     startTime: Optional[str] = None
     endTime: Optional[str] = None
     category_id: Optional[int] = None

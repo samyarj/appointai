@@ -1,6 +1,4 @@
-from sqlalchemy.orm import Session
 from app.db.session import engine, Base
-from app.models.all_models import User, Category, Event, Todo
 
 def init_db():
     print("Creating database tables...")

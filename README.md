@@ -49,7 +49,6 @@ npm install
 DATABASE_URL=postgresql://user:password@localhost/appointai
 SECRET_KEY=your-secret-key-change-in-production
 FRONTEND_URL=http://localhost:5173
-GEMINI_API_KEY=your-google-gemini-api-key
 ```
 
 **Frontend** — in `frontend/.env`:
@@ -122,8 +121,3 @@ Backend and frontend each have a short `README.md` with folder-specific notes; *
 - **Backend:** FastAPI, SQLAlchemy, PostgreSQL, JWT (python-jose), bcrypt
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router
 
----
-
-## License
-
-MIT

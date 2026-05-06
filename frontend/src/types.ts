@@ -10,6 +10,7 @@ export interface Event {
   is_recurring?: boolean;
   recurrence_rule?: string;
   createdAt?: string;
+  original_event_id?: number;
 }
 
 export interface Todo {

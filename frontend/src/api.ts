@@ -7,7 +7,7 @@ const getAuthToken = (): string | null => {
   return null;
 };
 
-export const setAuthToken = (token: string): void => {
+export const setAuthToken = (_token: string): void => {
   // Intentionally left blank. Token is managed via httpOnly cookies.
 };
 

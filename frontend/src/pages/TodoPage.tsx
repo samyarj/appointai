@@ -2,27 +2,10 @@ import React, { useState, useEffect } from "react";
 import { todoAPI, categoryAPI } from "../api";
 import { useRefresh } from "../contexts/RefreshContext";
 
-type TodoItem = {
-  id: number;
-  user_id?: number;
-  category_id?: number;
-  title: string;
-  description?: string;
-  priority?: "low" | "medium" | "high";
-  estimated_duration?: string;
-  due_date?: string;
-  completed: boolean;
-  created_at?: string;
-};
-
-interface Category {
-  id: number;
-  name: string;
-  color: string;
-  description: string;
-  created_at: string;
-  usage_count: number;
-}
+import type { Todo as TodoItem, Category } from "../types";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { TodoStats } from "../components/todos/TodoStats";
+import { TodoForm } from "../components/todos/TodoForm";
 
 const Todo: React.FC = () => {
   const { refreshKey } = useRefresh();
@@ -280,8 +263,8 @@ const Todo: React.FC = () => {
         if (!b.due_date) return -1;
         return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
       } else if (sortBy === "created") {
-        const aCreated = a.created_at || "";
-        const bCreated = b.created_at || "";
+        const aCreated = a.createdAt || "";
+        const bCreated = b.createdAt || "";
         return new Date(bCreated).getTime() - new Date(aCreated).getTime();
       }
       return 0;
@@ -409,47 +392,7 @@ const Todo: React.FC = () => {
             </div>
           )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">
-                Total
-              </h3>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {stats.total}
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">Todos</p>
-            </div>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">
-                Completed
-              </h3>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                {stats.completed}
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-400">Done</p>
-            </div>
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 text-sm">
-                Pending
-              </h3>
-              <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                {stats.pending}
-              </p>
-              <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                To do
-              </p>
-            </div>
-            <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-red-800 dark:text-red-300 text-sm">
-                Overdue
-              </h3>
-              <p className="text-2xl font-bold text-red-900 dark:text-red-100">
-                {stats.overdue}
-              </p>
-              <p className="text-xs text-red-600 dark:text-red-400">Late</p>
-            </div>
-          </div>
+          <TodoStats stats={stats} />
 
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
@@ -578,152 +521,25 @@ const Todo: React.FC = () => {
             <>
               {/* Add/Edit Todo Form */}
               {showAddForm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                      {editingTodo ? "Edit Todo" : "Add New Todo"}
-                    </h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={newTodo.title || ""}
-                        onChange={e =>
-                          setNewTodo({ ...newTodo, title: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter todo title"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Priority
-                      </label>
-                      <select
-                        value={newTodo.priority || "medium"}
-                        onChange={e =>
-                          setNewTodo({
-                            ...newTodo,
-                            priority: e.target.value as TodoItem["priority"],
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={newTodo.description || ""}
-                        onChange={e =>
-                          setNewTodo({
-                            ...newTodo,
-                            description: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                        placeholder="Enter description (optional)"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Category
-                      </label>
-                      <select
-                        value={newTodo.category_id || ""}
-                        onChange={e =>
-                          setNewTodo({
-                            ...newTodo,
-                            category_id: e.target.value
-                              ? parseInt(e.target.value)
-                              : undefined,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select category (optional)</option>
-                        {categories.map(category => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Estimated Duration
-                      </label>
-                      <input
-                        type="text"
-                        value={newTodo.estimated_duration || ""}
-                        onChange={e =>
-                          setNewTodo({
-                            ...newTodo,
-                            estimated_duration: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., 2 hours, 30 min"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Due Date
-                      </label>
-                      <input
-                        type="date"
-                        value={newTodo.due_date || ""}
-                        onChange={e =>
-                          setNewTodo({ ...newTodo, due_date: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setEditingTodo(null);
-                        setNewTodo({
-                          title: "",
-                          description: "",
-                          priority: "medium",
-                          estimated_duration: "",
-                          due_date: "",
-                          category_id: undefined,
-                        });
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={editingTodo ? handleUpdateTodo : handleAddTodo}
-                      disabled={!newTodo.title?.trim()}
-                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      {editingTodo ? "Update Todo" : "Add Todo"}
-                    </button>
-                  </div>
-                </div>
+                <TodoForm
+                  newTodo={newTodo}
+                  setNewTodo={setNewTodo}
+                  categories={categories}
+                  editingTodo={editingTodo}
+                  onCancel={() => {
+                    setShowAddForm(false);
+                    setEditingTodo(null);
+                    setNewTodo({
+                      title: "",
+                      description: "",
+                      priority: "medium",
+                      estimated_duration: "",
+                      due_date: "",
+                      category_id: undefined,
+                    });
+                  }}
+                  onSubmit={editingTodo ? handleUpdateTodo : handleAddTodo}
+                />
               )}
 
               {/* Todos List */}
@@ -844,7 +660,7 @@ const Todo: React.FC = () => {
                                   {new Date(todo.due_date).toLocaleDateString()}
                                 </span>
                               )}
-                              {todo.created_at && (
+                              {todo.createdAt && (
                                 <span className="flex items-center gap-1">
                                   <svg
                                     className="w-3 h-3"
@@ -859,7 +675,7 @@ const Todo: React.FC = () => {
                                   </svg>
                                   Created:{" "}
                                   {new Date(
-                                    todo.created_at
+                                    todo.createdAt
                                   ).toLocaleDateString()}
                                 </span>
                               )}
@@ -929,34 +745,13 @@ const Todo: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
-      {/* Confirmation Dialog */}
-      {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-              {confirmDialog.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-              {confirmDialog.message}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={confirmDialog.onCancel}
-                className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={confirmDialog.onCancel}
+      />
     </>
   );
 };

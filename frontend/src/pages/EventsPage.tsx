@@ -3,29 +3,11 @@ import { eventAPI, categoryAPI } from "../api";
 import { useRefresh } from "../contexts/RefreshContext";
 import { RRule } from "rrule";
 
-type Event = {
-  id: number;
-  user_id?: number;
-  category_id?: number;
-  title: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  duration?: string;
-  is_recurring?: boolean;
-  recurrence_rule?: string;
-  createdAt?: string;
-  original_event_id?: number; // Helper for frontend-generated instances
-};
-
-interface Category {
-  id: number;
-  name: string;
-  color: string;
-  description: string;
-  created_at: string;
-  usage_count: number;
-}
+import type { Event, Category } from "../types";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EventStats } from "../components/events/EventStats";
+import { EventForm } from "../components/events/EventForm";
+import { EventList } from "../components/events/EventList";
 
 const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -593,10 +575,10 @@ const Events: React.FC = () => {
     return category ? category.name : "Unknown";
   };
 
-  const getCategoryColor = (categoryId?: number) => {
+  const getCategoryColor = (categoryId?: number): string => {
     if (!categoryId) return "#6B7280";
     const category = categories.find(c => c.id === categoryId);
-    return category ? category.color : "#6B7280";
+    return category?.color || "#6B7280";
   };
 
   const filteredEvents = getFilteredAndSortedEvents();
@@ -646,51 +628,7 @@ const Events: React.FC = () => {
             </div>
           )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm">
-                Total
-              </h3>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {stats.total}
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">Events</p>
-            </div>
-            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 dark:text-green-300 text-sm">
-                Upcoming
-              </h3>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                {stats.upcoming}
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-400">
-                Scheduled
-              </p>
-            </div>
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-purple-800 dark:text-purple-300 text-sm">
-                Past
-              </h3>
-              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                {stats.past}
-              </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">
-                Completed
-              </p>
-            </div>
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg p-4">
-              <h3 className="font-semibold text-orange-800 dark:text-orange-300 text-sm">
-                This Month
-              </h3>
-              <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                {stats.thisMonth}
-              </p>
-              <p className="text-xs text-orange-600 dark:text-orange-400">
-                Events
-              </p>
-            </div>
-          </div>
+          <EventStats stats={stats} />
 
           {/* Filters and Sort */}
           <div className="flex flex-wrap gap-4 items-center">
@@ -789,472 +727,67 @@ const Events: React.FC = () => {
             <>
               {/* Add/Edit Event Form */}
               {showAddForm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-xl p-6 mb-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                    {editingEvent ? "Edit Event" : "Add New Event"}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Event Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={newEvent.title || ""}
-                        onChange={e =>
-                          setNewEvent({ ...newEvent, title: e.target.value })
-                        }
-                        placeholder="Enter event title"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={newEvent.date || ""}
-                        onChange={e =>
-                          setNewEvent({ ...newEvent, date: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Category
-                      </label>
-                      <select
-                        value={newEvent.category_id || ""}
-                        onChange={e =>
-                          setNewEvent({
-                            ...newEvent,
-                            category_id: e.target.value
-                              ? parseInt(e.target.value)
-                              : undefined,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map(category => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Recurrence
-                      </label>
-                      <div className="flex gap-2">
-                        <select
-                          value={recurrenceType}
-                          onChange={e =>
-                            setRecurrenceType(e.target.value as any)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
-                        >
-                          <option value="NONE">Does not repeat</option>
-                          <option value="DAILY">Daily</option>
-                          <option value="WEEKLY">Weekly</option>
-                          <option value="MONTHLY">Monthly</option>
-                        </select>
-                        {recurrenceType !== "NONE" && (
-                          <input
-                            type="date"
-                            placeholder="Until (optional)"
-                            value={recurrenceEnd}
-                            onChange={e => setRecurrenceEnd(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
-                            title="Recurrence end date (optional)"
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Start Time *
-                      </label>
-                      <input
-                        type="time"
-                        value={newEvent.startTime || ""}
-                        onChange={e =>
-                          setNewEvent({
-                            ...newEvent,
-                            startTime: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        End Time *
-                      </label>
-                      <input
-                        type="time"
-                        value={newEvent.endTime || ""}
-                        onChange={e =>
-                          setNewEvent({ ...newEvent, endTime: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={
-                        editingEvent ? handleUpdateEvent : handleAddEvent
-                      }
-                      className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-                    >
-                      {editingEvent ? "Update Event" : "Add Event"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setEditingEvent(null);
-                        setNewEvent({
-                          title: "",
-                          date: "",
-                          startTime: "",
-                          endTime: "",
-                          duration: "",
-                          category_id: undefined,
-                          is_recurring: false,
-                          recurrence_rule: "",
-                        });
-                        setRecurrenceType("NONE");
-                        setRecurrenceEnd("");
-                      }}
-                      className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+                <EventForm
+                  newEvent={newEvent}
+                  setNewEvent={setNewEvent}
+                  categories={categories}
+                  editingEvent={editingEvent}
+                  recurrenceType={recurrenceType}
+                  setRecurrenceType={setRecurrenceType}
+                  recurrenceEnd={recurrenceEnd}
+                  setRecurrenceEnd={setRecurrenceEnd}
+                  onSubmit={editingEvent ? handleUpdateEvent : handleAddEvent}
+                  onCancel={() => {
+                    setShowAddForm(false);
+                    setEditingEvent(null);
+                    setNewEvent({
+                      title: "",
+                      date: "",
+                      startTime: "",
+                      endTime: "",
+                      duration: "",
+                      category_id: undefined,
+                      is_recurring: false,
+                      recurrence_rule: "",
+                    });
+                    setRecurrenceType("NONE");
+                    setRecurrenceEnd("");
+                  }}
+                />
               )}
 
-              {/* Events List */}
-              {filteredEvents.length > 0 ? (
-                <div className="space-y-4">
-                  {(() => {
-                    const groupedEvents: { parent: Event; children: Event[] }[] = [];
-                    const seenParents = new Set<number>();
-
-                    filteredEvents.forEach(event => {
-                      const parentId = event.original_event_id || event.id;
-                      if (!seenParents.has(parentId)) {
-                        seenParents.add(parentId);
-                        const parentEvent = events.find(e => e.id === parentId) || event;
-                        const children = events.filter(e => e.original_event_id === parentId);
-                        children.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                        groupedEvents.push({ parent: parentEvent, children });
-                      }
-                    });
-
-                    return groupedEvents.map(({ parent, children }) => {
-                      const eventDate = new Date(parent.date + "T00:00:00");
-                      const isPast = eventDate < today;
-                      const isToday = eventDate.toDateString() === today.toDateString();
-                      const categoryColor = getCategoryColor(parent.category_id);
-                      const hasChildren = parent.is_recurring && children.length > 0;
-                      const isExpanded = expandedSeries[parent.id];
-
-                      return (
-                        <div key={parent.id} className="mb-4">
-                          <div
-                            className={`border rounded-xl p-6 transition-all duration-200 hover:shadow-md ${
-                              isPast
-                                ? "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
-                                : isToday
-                                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-3">
-                                  {hasChildren && (
-                                    <button
-                                      onClick={() => toggleSeries(parent.id)}
-                                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                      title={isExpanded ? "Collapse series" : "Expand series"}
-                                    >
-                                      {isExpanded ? (
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                        </svg>
-                                      ) : (
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  )}
-                                  <div
-                                    className="w-4 h-4 rounded-full"
-                                    style={{ backgroundColor: categoryColor }}
-                                  ></div>
-                                  <h3
-                                    className={`font-semibold text-xl ${
-                                      isPast
-                                        ? "text-gray-600 dark:text-gray-500"
-                                        : "text-gray-800 dark:text-gray-100"
-                                    }`}
-                                  >
-                                    {parent.title}
-                                  </h3>
-                                  {hasChildren && (
-                                    <span className="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-xs rounded-full font-medium flex items-center gap-1">
-                                      🔁 Series ({children.length + 1})
-                                    </span>
-                                  )}
-                                  {isToday && (
-                                    <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-medium">
-                                      Today
-                                    </span>
-                                  )}
-                                  {isPast && (
-                                    <span className="px-2 py-1 bg-gray-400 text-white text-xs rounded-full font-medium">
-                                      Past
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div
-                                  className={`space-y-2 text-sm ${hasChildren ? 'ml-10' : ''} ${
-                                    isPast
-                                      ? "text-gray-500 dark:text-gray-500"
-                                      : "text-gray-600 dark:text-gray-300"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span>📅</span>
-                                    <span className="font-medium">
-                                      {hasChildren ? "Starts: " : ""}
-                                      {eventDate.toLocaleDateString("en-US", {
-                                        weekday: "long",
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                      })}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-6">
-                                    <div className="flex items-center gap-2">
-                                      <span>🕐</span>
-                                      <span className="font-medium">
-                                        {parent.startTime} - {parent.endTime}
-                                      </span>
-                                    </div>
-
-                                    {parent.duration && (
-                                      <div className="flex items-center gap-2">
-                                        <span>⏱️</span>
-                                        <span>{parent.duration}</span>
-                                      </div>
-                                    )}
-
-                                    <div className="flex items-center gap-2">
-                                      <span>🏷️</span>
-                                      <span>
-                                        {getCategoryName(parent.category_id)}
-                                      </span>
-                                    </div>
-
-                                    {parent.is_recurring && (
-                                      <div
-                                        className="flex items-center gap-2 text-blue-600 dark:text-blue-400"
-                                        title={`Recurs: ${parent.recurrence_rule}`}
-                                      >
-                                        <span>🔁</span>
-                                        <span className="text-xs">
-                                          {parent.recurrence_rule?.includes("DAILY")
-                                            ? "Daily"
-                                            : parent.recurrence_rule?.includes("WEEKLY")
-                                              ? "Weekly"
-                                              : parent.recurrence_rule?.includes("MONTHLY")
-                                                ? "Monthly"
-                                                : "Recurring"}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex space-x-2 ml-4 self-center">
-                                <button
-                                  onClick={() => handleEditEvent(parent)}
-                                  className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm hover:shadow"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteEvent(parent.id)}
-                                  className="px-4 py-2 bg-red-400 text-white text-sm rounded-lg hover:bg-red-500 transition-colors font-medium shadow-sm hover:shadow"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Render Children if expanded */}
-                          {isExpanded && hasChildren && (
-                            <div className="mt-3 ml-6 pl-6 border-l-2 border-gray-200 dark:border-gray-700/50 space-y-3">
-                              {children.map(child => {
-                                const childDate = new Date(child.date + "T00:00:00");
-                                const cIsPast = childDate < today;
-                                const cIsToday = childDate.toDateString() === today.toDateString();
-
-                                return (
-                                  <div
-                                    key={child.id}
-                                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                                      cIsPast
-                                        ? "bg-gray-50 border-gray-100 dark:bg-gray-800/20 dark:border-gray-700/50 text-gray-400 dark:text-gray-500"
-                                        : cIsToday
-                                          ? "bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-800/30 text-blue-800 dark:text-blue-300"
-                                          : "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-200 dark:hover:border-blue-800"
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-4">
-                                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-md">
-                                        <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 leading-none mb-1">
-                                          {childDate.toLocaleDateString("en-US", { month: "short" })}
-                                        </span>
-                                        <span className="text-lg font-bold leading-none">
-                                          {childDate.getDate()}
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <div className="font-medium flex items-center gap-2">
-                                          {childDate.toLocaleDateString("en-US", { weekday: "long" })}
-                                          {cIsToday && (
-                                            <span className="text-[10px] uppercase font-bold text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">Today</span>
-                                          )}
-                                        </div>
-                                        <div className="text-sm opacity-80 flex items-center gap-1">
-                                          <span>🕐</span> {child.startTime} - {child.endTime}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex space-x-1 opacity-50 hover:opacity-100 transition-opacity">
-                                      <button
-                                        onClick={() => handleEditEvent(child)}
-                                        className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md"
-                                        title="Edit this occurrence"
-                                      >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteEvent(child.id)}
-                                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
-                                        title="Delete this occurrence"
-                                      >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 dark:text-gray-600 text-6xl mb-4">
-                    📅
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
-                    No events found
-                  </h3>
-                  <p className="text-gray-400 dark:text-gray-500 mb-6">
-                    {filterBy === "upcoming"
-                      ? "No upcoming events scheduled"
-                      : filterBy === "past"
-                        ? "No past events found"
-                        : "No events in your calendar"}
-                  </p>
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-                  >
-                    Add Your First Event
-                  </button>
-                </div>
-              )}
+              <EventList
+                events={filteredEvents}
+                allEvents={events}
+                today={today}
+                getCategoryName={getCategoryName}
+                getCategoryColor={getCategoryColor}
+                onEdit={handleEditEvent}
+                onDelete={handleDeleteEvent}
+                expandedSeries={expandedSeries}
+                toggleSeries={toggleSeries}
+              />
             </>
           )}
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
-      {confirmDialog.isOpen && (
-        <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-              {confirmDialog.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-              {confirmDialog.message}
-            </p>
-            {confirmDialog.buttons ? (
-              <div className="flex flex-col gap-3 mt-2">
-                {confirmDialog.buttons.map((btn, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      btn.action();
-                      setConfirmDialog(p => ({ ...p, isOpen: false }));
-                    }}
-                    className={btn.className}
-                  >
-                    {btn.label}
-                  </button>
-                ))}
-                <button
-                  onClick={confirmDialog.onCancel}
-                  className="mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors underline"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={confirmDialog.onCancel}
-                  className="px-5 py-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 rounded-lg border border-gray-300 dark:border-gray-600"
-                >
-                  Cancel
-                </button>
-                {confirmDialog.onConfirm && (
-                  <button
-                    onClick={confirmDialog.onConfirm}
-                    className="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    Confirm
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={confirmDialog.onCancel}
+        buttons={
+          confirmDialog.buttons?.map(btn => ({
+            ...btn,
+            action: () => {
+              btn.action();
+              setConfirmDialog(p => ({ ...p, isOpen: false }));
+            },
+          }))
+        }
+      />
     </>
   );
 };

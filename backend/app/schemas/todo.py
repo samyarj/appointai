@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 from datetime import date
 
 class TodoSchema(BaseModel):
@@ -17,17 +17,17 @@ class TodoSchema(BaseModel):
         from_attributes = True
 
 class TodoCreateSchema(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
-    priority: Optional[str] = "medium"
+    priority: Optional[Literal["low", "medium", "high"]] = "medium"
     estimated_duration: Optional[str] = None
     due_date: Optional[date] = None
     category_id: Optional[int] = None
 
 class TodoUpdateSchema(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
-    priority: Optional[str] = None
+    priority: Optional[Literal["low", "medium", "high"]] = None
     estimated_duration: Optional[str] = None
     due_date: Optional[date] = None
     category_id: Optional[int] = None

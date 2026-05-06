@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import { useRefresh } from "../contexts/RefreshContext";
+import type { Event, Todo, Category } from "../types";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { refreshKey } = useRefresh();
-  const [events, setEvents] = useState<any[]>([]);
-  const [todos, setTodos] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+
+  const [events, setEvents] = useState<Event[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

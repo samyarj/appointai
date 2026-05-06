@@ -9,11 +9,13 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db.session import Base
+from app import models  # Import models to register them
 
+from sqlalchemy.pool import StaticPool
 
 # ---- In-memory SQLite for isolation ----
 TEST_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -68,3 +70,18 @@ def sample_category(db):
     db.commit()
     db.refresh(category)
     return category
+
+@pytest.fixture
+def client(db):
+    """Provide a TestClient with the database dependency overridden."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.db.session import get_db
+
+    def override_get_db():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()

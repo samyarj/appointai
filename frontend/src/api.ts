@@ -1,19 +1,19 @@
 // Centralized API utility for frontend
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// Get token from localStorage
+// We no longer store authToken in localStorage for security reasons.
+// The backend uses httpOnly cookies.
 const getAuthToken = (): string | null => {
-  return localStorage.getItem("authToken");
+  return null;
 };
 
-// Set token in localStorage
 export const setAuthToken = (token: string): void => {
-  localStorage.setItem("authToken", token);
+  // Intentionally left blank. Token is managed via httpOnly cookies.
 };
 
-// Remove token from localStorage
 export const removeAuthToken = (): void => {
-  localStorage.removeItem("authToken");
+  // Intentionally left blank. Backend should handle cookie clearance if implemented,
+  // or cookie will expire.
 };
 
 // Get user info from localStorage
@@ -88,6 +88,7 @@ export const authAPI = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -106,6 +107,7 @@ export const authAPI = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ name, email, password }),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -151,7 +153,7 @@ export const authAPI = {
 
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {
-  return !!getAuthToken();
+  return !!getUserInfo();
 };
 
 // Category API functions

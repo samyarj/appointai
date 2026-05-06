@@ -10,14 +10,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password, hashed_password):
-    # Pre-hash with SHA256 to avoid bcrypt's 72-byte limit
-    password_hash_input = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
-    return pwd_context.verify(password_hash_input, hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    # Pre-hash with SHA256 to avoid bcrypt's 72-byte limit
-    password_hash_input = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    return pwd_context.hash(password_hash_input)
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

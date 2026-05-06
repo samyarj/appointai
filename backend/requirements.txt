@@ -24,3 +24,7 @@ groq==0.25.0
 # Testing
 pytest==8.3.5
 pytest-asyncio==0.25.3
+
+# Logging & Rate Limiting
+python-json-logger==2.0.7
+slowapi==0.1.9

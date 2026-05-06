@@ -339,7 +339,8 @@ const Calendar: React.FC = () => {
       return events.reduce((total, event) => {
         const [startHour, startMin] = event.startTime.split(":").map(Number);
         const [endHour, endMin] = event.endTime.split(":").map(Number);
-        const duration = endHour * 60 + endMin - (startHour * 60 + startMin);
+        let duration = endHour * 60 + endMin - (startHour * 60 + startMin);
+        if (duration < 0) duration += 24 * 60;
         return total + duration / 60;
       }, 0);
     };

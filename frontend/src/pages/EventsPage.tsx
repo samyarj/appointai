@@ -210,9 +210,10 @@ const Events: React.FC = () => {
 
     const startTotalMin = startHour * 60 + startMin;
     const endTotalMin = endHour * 60 + endMin;
-    const durationMin = endTotalMin - startTotalMin;
+    let durationMin = endTotalMin - startTotalMin;
+    if (durationMin < 0) durationMin += 24 * 60;
+    if (durationMin === 0) return "";
 
-    if (durationMin <= 0) return "";
 
     const hours = Math.floor(durationMin / 60);
     const minutes = durationMin % 60;
